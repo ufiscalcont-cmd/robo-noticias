@@ -81,13 +81,18 @@ jobs:
           if [ "$ENTRADA_SIMULAR" = "true" ]; then ARGS+=(--simular); fi
           python -m noticias_bot "${ARGS[@]}"
 
+      # Na simulação, publica a prévia no ramo "previa-juridico" (não afeta o robô)
       - name: Guardar prévia da simulação
         if: inputs.simular
-        uses: actions/upload-artifact@v4
-        with:
-          name: previa-juridico
-          path: saida/juridico/
-          retention-days: 3
+        run: |
+          cp -r saida/juridico /tmp/previa
+          git config user.name "robo-noticias"
+          git config user.email "robo-noticias@users.noreply.github.com"
+          git checkout --orphan previa-juridico
+          git rm -rq --cached . && git clean -fdqx -e .git
+          cp -r /tmp/previa/* . && git add -A
+          git commit -qm "prévia $(date -u +%FT%TZ)" && git push -f origin previa-juridico
+          git checkout -q "${GITHUB_REF_NAME}"
 
       # Salva o registro de envios (mesmo se um canal falhou) e mantém o
       # repositório ativo — o GitHub desliga agendamentos após 60 dias parado.
