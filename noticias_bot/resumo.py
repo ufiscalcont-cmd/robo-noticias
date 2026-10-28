@@ -1,6 +1,6 @@
 """Resumo editorial da edição — 100% gratuito.
 
-1º) GitHub Models (IA gratuita do GitHub, usa o GITHUB_TOKEN do próprio Actions).
+1º) Google Gemini, no plano gratuito (chave do Google AI Studio, sem cartão).
 2º) Se a IA não estiver disponível: resumo automático sem IA, montado a partir
     das notícias mais repercutidas, com citações diretas das manchetes.
 
@@ -26,9 +26,8 @@ from .janela import Janela
 
 log = logging.getLogger(__name__)
 
-API_URLS = ["https://models.github.ai/inference/chat/completions",
-            "https://models.inference.ai.azure.com/chat/completions"]
-MODELOS_PADRAO = ["openai/gpt-4o", "openai/gpt-4o-mini"]
+API_URL = "https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent"
+MODELOS_PADRAO = ["gemini-flash-latest", "gemini-flash-lite-latest"]
 MESES = ["jan.", "fev.", "mar.", "abr.", "maio", "jun.", "jul.", "ago.", "set.", "out.", "nov.", "dez."]
 
 SISTEMA = """Você é editor-chefe de um boletim de notícias e revisor de língua portuguesa \
@@ -67,35 +66,22 @@ def _entrada(resultado: list[dict], max_por_topico: int = 10) -> tuple[str, dict
 
 
 def _chamar_api(env: dict, mensagem: str, modelo: str) -> str:
-    corpo = {"model": modelo, "temperature": 0.4, "max_tokens": 1500,
-             "messages": [{"role": "system", "content": SISTEMA},
-                          {"role": "user", "content": mensagem}]}
-    erros = []
-    for url in API_URLS:
-        corpo_url = dict(corpo, model=modelo if "github.ai" in url else modelo.split("/")[-1])
-        req = urllib.request.Request(
-            url, data=json.dumps(corpo_url).encode(), method="POST",
-            headers={"Authorization": f"Bearer {env['GITHUB_TOKEN']}", "Content-Type": "application/json",
-                     "Accept": "application/json", "User-Agent": "noticias-ufiscal"})
-        try:
-            with urllib.request.urlopen(req, timeout=120) as resp:
-                bruto = resp.read().decode(errors="replace")
-                tipo = resp.headers.get("Content-Type", "")
-                status = resp.status
-        except urllib.error.HTTPError as e:  # mostra o motivo real (ex.: 401, 403, 429)
-            erros.append(f"{url.split('/')[2]} HTTP {e.code}: {e.read().decode(errors='replace')[:200]}")
-            continue
-        except Exception as e:
-            erros.append(f"{url.split('/')[2]}: {e}")
-            continue
-        try:
-            dados = json.loads(bruto)
-            break
-        except ValueError:
-            erros.append(f"{url.split('/')[2]} HTTP {status} {tipo}: {bruto[:200]!r}")
-    else:
-        raise RuntimeError(" | ".join(erros))
-    return dados["choices"][0]["message"]["content"]
+    corpo = {
+        "systemInstruction": {"parts": [{"text": SISTEMA}]},
+        "contents": [{"role": "user", "parts": [{"text": mensagem}]}],
+        "generationConfig": {"temperature": 0.4, "maxOutputTokens": 2048,
+                             "responseMimeType": "application/json"},
+    }
+    req = urllib.request.Request(
+        API_URL.format(modelo=modelo), data=json.dumps(corpo).encode(), method="POST",
+        headers={"x-goog-api-key": env["GEMINI_API_KEY"], "Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=120) as resp:
+            dados = json.loads(resp.read())
+    except urllib.error.HTTPError as e:  # mostra o motivo real (ex.: 400, 403, 429)
+        raise RuntimeError(f"HTTP {e.code}: {e.read().decode(errors='replace')[:300]}") from None
+    partes = dados["candidates"][0]["content"]["parts"]
+    return "".join(p.get("text", "") for p in partes)
 
 
 def _ler_json(texto: str) -> dict:
@@ -248,7 +234,7 @@ def gerar(env: dict, janela: Janela, resultado: list[dict], todas: list | None =
     modo = (env.get("RESUMO") or "auto").lower()
     if modo in ("nao", "não", "false", "0", "desligado"):
         return None
-    if modo != "sem_ia" and env.get("GITHUB_TOKEN"):
+    if modo != "sem_ia" and env.get("GEMINI_API_KEY"):
         try:
             r = _com_ia(env, janela, resultado)
             if r:

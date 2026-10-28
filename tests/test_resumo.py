@@ -45,7 +45,7 @@ class TestResumo(unittest.TestCase):
         resposta = json.dumps({"titulo": "Um dia de decisões", "paragrafos": ["Parágrafo um.", "Parágrafo dois."],
                                "citadas": [1, 3, 99]})
         with mock.patch.object(resumo, "_chamar_api", return_value=f"```json\n{resposta}\n```"):
-            r = resumo.gerar({"GITHUB_TOKEN": "x"}, J, RES)
+            r = resumo.gerar({"GEMINI_API_KEY": "x"}, J, RES)
         self.assertEqual(r["titulo"], "Um dia de decisões")
         self.assertEqual(len(r["referencias"]), 2)  # id 99 inexistente é descartado
         self.assertTrue(r["origem"].startswith("IA"))
@@ -53,7 +53,7 @@ class TestResumo(unittest.TestCase):
     def test_ia_falha_usa_sem_ia(self):
         with mock.patch.object(resumo, "_chamar_api", side_effect=OSError("429")), \
              mock.patch.object(resumo.time, "sleep"):
-            r = resumo.gerar({"GITHUB_TOKEN": "x"}, J, RES)
+            r = resumo.gerar({"GEMINI_API_KEY": "x"}, J, RES)
         self.assertEqual(r["origem"], "automático (sem IA)")
 
     def test_fake_news_fica_fora_do_resumo(self):

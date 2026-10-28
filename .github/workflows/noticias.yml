@@ -36,7 +36,6 @@ on:
 
 permissions:
   contents: write
-  models: read   # IA gratuita do GitHub para o resumo
 
 concurrency:
   group: robo-noticias
@@ -56,7 +55,7 @@ jobs:
       - name: Coletar e enviar
         env:
           CANAIS: ${{ vars.CANAIS || 'email' }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           RESUMO: ${{ vars.RESUMO }}
           RESUMO_MODELO: ${{ vars.RESUMO_MODELO }}
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
