@@ -215,3 +215,10 @@ class TestFiltrosDoPerfil(unittest.TestCase):
         self.assertTrue(descartar(n("Aviso de Licitação - Pregão Eletrônico nº 12/2026"), f))
         self.assertFalse(descartar(n("STJ decide que ICMS não integra base do PIS em operação X"), f))
         self.assertFalse(descartar(n("TCU suspende licitação de R$ 2 bi do DNIT"), f))
+
+    def test_exige_termo_da_area_no_titulo(self):
+        from noticias_bot.coletor import tem_termo
+        self.assertTrue(tem_termo("Carf mantém autuação de IRPJ", ["irpj"]))
+        self.assertTrue(tem_termo("Tributação de dividendos avança", ["tribut"]))
+        self.assertFalse(tem_termo("Comissão aprova projeto", ["iss"]))      # sigla curta = palavra inteira
+        self.assertFalse(tem_termo("Leilão de imóveis", ["lei"]))

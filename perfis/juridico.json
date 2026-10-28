@@ -6,10 +6,53 @@
   "unidade": "notícias jurídicas",
   "limite_por_topico": 15,
   "filtros": {
-    "_comentario": "fontes_prioritarias aparecem primeiro em cada tópico; títulos com excluir_termos e títulos em caixa alta (editais publicados em jornais) são descartados.",
-    "fontes_prioritarias": ["conjur.com.br", "migalhas.com.br", "jota.info", "jus.br", "gov.br", "camara.leg.br", "senado.leg.br", "oab.org.br", "contabeis.com.br", "valor.globo.com", "agenciabrasil.ebc.com.br", "jusbrasil.com.br"],
-    "excluir_termos": ["aviso de licitação", "aviso de pregão", "extrato de contrato", "extrato do contrato", "termo de homologação", "termo aditivo nº", "apostila ao contrato", "edital de convocação", "edital de citação", "edital de intimação", "resultado de julgamento", "processo licitatório nº", "pregão eletrônico nº", "dispensa nº", "inexigibilidade nº", "concorrência nº", "tomada de preços nº", "chamamento público nº", "horóscopo", "loteria", "mega-sena"],
-    "ignorar_titulos_em_maiusculas": true
+    "_comentario": "fontes_prioritarias aparecem primeiro em cada tópico. São descartados: títulos com excluir_termos ou excluir_regex, títulos em caixa alta (editais publicados em jornais) e títulos com menos de min_palavras_titulo palavras (páginas de autor e de arquivo). Em cada tópico, exigir_no_titulo lista os termos da área: a notícia só entra se o título tiver pelo menos um (siglas de até 4 letras valem como palavra inteira; o resto, como início de palavra).",
+    "fontes_prioritarias": [
+      "conjur.com.br",
+      "migalhas.com.br",
+      "jota.info",
+      "jus.br",
+      "gov.br",
+      "camara.leg.br",
+      "senado.leg.br",
+      "oab.org.br",
+      "contabeis.com.br",
+      "valor.globo.com",
+      "agenciabrasil.ebc.com.br",
+      "jusbrasil.com.br"
+    ],
+    "excluir_termos": [
+      "aviso de licitação",
+      "aviso de pregão",
+      "extrato de contrato",
+      "extrato do contrato",
+      "termo de homologação",
+      "termo aditivo nº",
+      "apostila ao contrato",
+      "edital de convocação",
+      "edital de citação",
+      "edital de intimação",
+      "resultado de julgamento",
+      "processo licitatório nº",
+      "pregão eletrônico nº",
+      "dispensa nº",
+      "inexigibilidade nº",
+      "concorrência nº",
+      "tomada de preços nº",
+      "chamamento público nº",
+      "horóscopo",
+      "loteria",
+      "mega-sena"
+    ],
+    "ignorar_titulos_em_maiusculas": true,
+    "excluir_regex": [
+      "^Arquivo de ",
+      "P[áa]gina \\d+ de \\d+",
+      "^Sorteio d",
+      "\\blança(m)? (livro|obra|novas edi)",
+      "^Livro "
+    ],
+    "min_palavras_titulo": 5
   },
   "max_por_topico_whatsapp": 6,
   "topicos": [
@@ -17,62 +60,297 @@
       "nome": "Direito Tributário",
       "emoji": "🧾",
       "abertura": "No Direito Tributário",
+      "exigir_no_titulo": [
+        "tribut",
+        "imposto",
+        "ICMS",
+        "PIS",
+        "Cofins",
+        "IRPJ",
+        "CSLL",
+        "ISS",
+        "IPI",
+        "IPTU",
+        "ITCMD",
+        "ITBI",
+        "IBS",
+        "CBS",
+        "Receita Federal",
+        "Carf",
+        "PGFN",
+        "fiscal",
+        "fisco",
+        "JCP",
+        "juros sobre capital",
+        "Simples Nacional",
+        "imposto de renda",
+        "contribuição previdenciária patronal",
+        "split payment",
+        "Imposto Seletivo",
+        "Comitê Gestor",
+        "Refis",
+        "Perse",
+        "Difal",
+        "contribuinte"
+      ],
       "fontes": [
-        {"tipo": "google_busca", "q": "(STF OR STJ OR CARF OR TRF OR TJ) (tributário OR tributária OR tributo OR ICMS OR PIS OR Cofins OR IRPJ OR ISS)"},
-        {"tipo": "google_busca", "q": "\"execução fiscal\" OR \"transação tributária\" OR \"planejamento tributário\" OR \"compensação tributária\" OR \"contencioso tributário\" OR PGFN"},
-        {"tipo": "google_busca", "q": "\"reforma tributária\" (regulamentação OR \"Comitê Gestor\" OR \"Imposto Seletivo\" OR \"split payment\" OR \"lei complementar\" OR transição)"},
-        {"tipo": "google_busca", "q": "(tributário OR tributária OR tributo) (site:conjur.com.br OR site:migalhas.com.br OR site:jota.info)"}
+        {
+          "tipo": "google_busca",
+          "q": "(STF OR STJ OR CARF OR TRF OR TJ) (tributário OR tributária OR tributo OR ICMS OR PIS OR Cofins OR IRPJ OR ISS)"
+        },
+        {
+          "tipo": "google_busca",
+          "q": "\"execução fiscal\" OR \"transação tributária\" OR \"planejamento tributário\" OR \"compensação tributária\" OR \"contencioso tributário\" OR PGFN"
+        },
+        {
+          "tipo": "google_busca",
+          "q": "\"reforma tributária\" (regulamentação OR \"Comitê Gestor\" OR \"Imposto Seletivo\" OR \"split payment\" OR \"lei complementar\" OR transição)"
+        },
+        {
+          "tipo": "google_busca",
+          "q": "(tributário OR tributária OR tributo) (site:conjur.com.br OR site:migalhas.com.br OR site:jota.info)"
+        }
       ]
     },
     {
       "nome": "Direito do Trabalho",
       "emoji": "👷",
       "abertura": "Na esfera trabalhista",
+      "exigir_no_titulo": [
+        "trabalh",
+        "TST",
+        "TRT",
+        "emprega",
+        "demiss",
+        "demitid",
+        "justa causa",
+        "CLT",
+        "salári",
+        "férias",
+        "sindica",
+        "rescis",
+        "jornada",
+        "horas extras",
+        "hora extra",
+        "6x1",
+        "FGTS",
+        "assédio",
+        "terceiriza",
+        "pejotiza",
+        "NR-1",
+        "vínculo",
+        "convenção coletiva",
+        "acordo coletivo",
+        "MPT",
+        "dispensa discriminatória",
+        "insalubridade",
+        "periculosidade",
+        "estabilidade"
+      ],
       "fontes": [
-        {"tipo": "google_busca", "q": "TST OR \"Justiça do Trabalho\" OR \"direito trabalhista\" OR \"reclamação trabalhista\" OR \"vínculo empregatício\" OR \"rescisão indireta\""},
-        {"tipo": "google_busca", "q": "pejotização OR \"escala 6x1\" OR \"NR-1\" OR \"acordo coletivo\" OR \"convenção coletiva\" OR \"Ministério Público do Trabalho\" OR terceirização"},
-        {"tipo": "google_busca", "q": "(trabalhista OR trabalhador OR empregador) (site:conjur.com.br OR site:migalhas.com.br OR site:jota.info)"}
+        {
+          "tipo": "google_busca",
+          "q": "TST OR \"Justiça do Trabalho\" OR \"direito trabalhista\" OR \"reclamação trabalhista\" OR \"vínculo empregatício\" OR \"rescisão indireta\""
+        },
+        {
+          "tipo": "google_busca",
+          "q": "pejotização OR \"escala 6x1\" OR \"NR-1\" OR \"acordo coletivo\" OR \"convenção coletiva\" OR \"Ministério Público do Trabalho\" OR terceirização"
+        },
+        {
+          "tipo": "google_busca",
+          "q": "(trabalhista OR trabalhador OR empregador) (site:conjur.com.br OR site:migalhas.com.br OR site:jota.info)"
+        }
       ]
     },
     {
       "nome": "Direito Previdenciário",
       "emoji": "🛡️",
       "abertura": "No Direito Previdenciário",
+      "exigir_no_titulo": [
+        "INSS",
+        "previd",
+        "aposentad",
+        "BPC",
+        "LOAS",
+        "auxílio",
+        "pensão por morte",
+        "perícia",
+        "segurad",
+        "salário-maternidade",
+        "benefício por incapacidade",
+        "benefícios previdenciários",
+        "TNU",
+        "RGPS",
+        "RPPS",
+        "revisão da vida toda",
+        "pente-fino",
+        "Dataprev",
+        "CNIS"
+      ],
       "fontes": [
-        {"tipo": "google_busca", "q": "INSS (STF OR STJ OR TNU OR TRF OR Justiça OR decisão OR revisão OR \"pente-fino\" OR perícia OR portaria)"},
-        {"tipo": "google_busca", "q": "previdenciário OR previdenciária OR aposentadoria OR BPC OR \"auxílio-doença\" OR \"benefício por incapacidade\" OR \"pensão por morte\" OR \"salário-maternidade\""},
-        {"tipo": "google_busca", "q": "(previdenciário OR previdenciária OR INSS OR aposentadoria) (site:conjur.com.br OR site:migalhas.com.br OR site:jota.info)"}
+        {
+          "tipo": "google_busca",
+          "q": "INSS (STF OR STJ OR TNU OR TRF OR Justiça OR decisão OR revisão OR \"pente-fino\" OR perícia OR portaria)"
+        },
+        {
+          "tipo": "google_busca",
+          "q": "previdenciário OR previdenciária OR aposentadoria OR BPC OR \"auxílio-doença\" OR \"benefício por incapacidade\" OR \"pensão por morte\" OR \"salário-maternidade\""
+        },
+        {
+          "tipo": "google_busca",
+          "q": "(previdenciário OR previdenciária OR INSS OR aposentadoria) (site:conjur.com.br OR site:migalhas.com.br OR site:jota.info)"
+        }
       ]
     },
     {
       "nome": "Administrativo e Licitações",
       "emoji": "🏛️",
       "abertura": "Em licitações e Direito Administrativo",
+      "exigir_no_titulo": [
+        "licita",
+        "pregão",
+        "Lei 14.133",
+        "14.133",
+        "contrato administrativo",
+        "contratos administrativos",
+        "contratação pública",
+        "contratações públicas",
+        "TCU",
+        "Tribunal de Contas",
+        "TCM",
+        "TCE",
+        "improbidade",
+        "administração pública",
+        "servidor público",
+        "servidores públicos",
+        "agente público",
+        "gestor público",
+        "concessão",
+        "parceria público-privada",
+        "PPP",
+        "desapropria",
+        "processo administrativo",
+        "Direito Administrativo",
+        "responsabilidade fiscal",
+        "sobrepreço",
+        "superfaturamento"
+      ],
       "fontes": [
-        {"tipo": "google_busca", "q": "licitação OR licitações OR \"pregão eletrônico\" OR \"Lei 14.133\" OR \"Nova Lei de Licitações\" OR \"contrato administrativo\" OR \"dispensa de licitação\""},
-        {"tipo": "google_busca", "q": "TCU OR \"Tribunal de Contas da União\" OR \"improbidade administrativa\" OR \"responsabilidade fiscal\" OR \"processo administrativo disciplinar\""},
-        {"tipo": "google_busca", "q": "\"TCM-BA\" OR \"TCM da Bahia\" OR \"TCE-BA\" OR \"TCE-SE\" OR \"Tribunal de Contas de Sergipe\" OR \"Tribunal de Contas dos Municípios\""},
-        {"tipo": "google_busca", "q": "(licitação OR licitações OR administrativo OR TCU OR improbidade) (site:conjur.com.br OR site:migalhas.com.br OR site:jota.info)"}
+        {
+          "tipo": "google_busca",
+          "q": "licitação OR licitações OR \"pregão eletrônico\" OR \"Lei 14.133\" OR \"Nova Lei de Licitações\" OR \"contrato administrativo\" OR \"dispensa de licitação\""
+        },
+        {
+          "tipo": "google_busca",
+          "q": "TCU OR \"Tribunal de Contas da União\" OR \"improbidade administrativa\" OR \"responsabilidade fiscal\" OR \"processo administrativo disciplinar\""
+        },
+        {
+          "tipo": "google_busca",
+          "q": "\"TCM-BA\" OR \"TCM da Bahia\" OR \"TCE-BA\" OR \"TCE-SE\" OR \"Tribunal de Contas de Sergipe\" OR \"Tribunal de Contas dos Municípios\""
+        },
+        {
+          "tipo": "google_busca",
+          "q": "(licitação OR licitações OR administrativo OR TCU OR improbidade) (site:conjur.com.br OR site:migalhas.com.br OR site:jota.info)"
+        }
       ]
     },
     {
       "nome": "Direito Empresarial",
       "emoji": "🏢",
       "abertura": "No Direito Empresarial",
+      "exigir_no_titulo": [
+        "recuperação judicial",
+        "recuperação extrajudicial",
+        "recuperanda",
+        "falência",
+        "falido",
+        "credores",
+        "societári",
+        "sócio",
+        "acionista",
+        "CVM",
+        "S.A.",
+        "holding",
+        "Junta Comercial",
+        "DREI",
+        "empresarial",
+        "personalidade jurídica",
+        "fusão",
+        "fusões",
+        "aquisição",
+        "incorporação",
+        "franquia",
+        "propriedade intelectual",
+        "marca registrada",
+        "INPI",
+        "governança",
+        "debênture",
+        "contrato empresarial",
+        "dissolução",
+        "assembleia de credores",
+        "Cade"
+      ],
       "fontes": [
-        {"tipo": "google_busca", "q": "\"recuperação judicial\" OR \"recuperação extrajudicial\" OR falência OR \"Lei de Falências\""},
-        {"tipo": "google_busca", "q": "\"direito societário\" OR \"direito empresarial\" OR CVM OR \"Lei das S.A.\" OR DREI OR \"Junta Comercial\" OR \"desconsideração da personalidade jurídica\""},
-        {"tipo": "google_busca", "q": "(empresarial OR societário OR \"recuperação judicial\" OR sócios OR contratos) (site:conjur.com.br OR site:migalhas.com.br OR site:jota.info)"}
+        {
+          "tipo": "google_busca",
+          "q": "\"recuperação judicial\" OR \"recuperação extrajudicial\" OR falência OR \"Lei de Falências\""
+        },
+        {
+          "tipo": "google_busca",
+          "q": "\"direito societário\" OR \"direito empresarial\" OR CVM OR \"Lei das S.A.\" OR DREI OR \"Junta Comercial\" OR \"desconsideração da personalidade jurídica\""
+        },
+        {
+          "tipo": "google_busca",
+          "q": "(empresarial OR societário OR \"recuperação judicial\" OR sócios OR contratos) (site:conjur.com.br OR site:migalhas.com.br OR site:jota.info)"
+        }
       ]
     },
     {
       "nome": "Tribunais, Leis e Prática",
       "emoji": "⚖️",
       "abertura": "Nos tribunais e na legislação",
+      "exigir_no_titulo": [
+        "STF",
+        "STJ",
+        "TST",
+        "CNJ",
+        "OAB",
+        "advoca",
+        "advogad",
+        "prazo",
+        "repercussão geral",
+        "repetitivo",
+        "súmula",
+        "lei",
+        "medida provisória",
+        "MP",
+        "PJe",
+        "honorários",
+        "sanciona",
+        "sancionad",
+        "Câmara aprova",
+        "Senado aprova",
+        "Diário Oficial",
+        "decreto",
+        "julgamento",
+        "tese",
+        "ministro",
+        "tribunal",
+        "Justiça"
+      ],
       "fontes": [
-        {"tipo": "google_busca", "q": "\"repercussão geral\" OR \"recurso repetitivo\" OR \"recursos repetitivos\" OR \"tema repetitivo\" OR \"súmula vinculante\" OR \"modulação de efeitos\""},
-        {"tipo": "google_busca", "q": "(\"lei sancionada\" OR \"sanciona lei\" OR \"medida provisória\" OR \"Diário Oficial\") (empresas OR tributos OR trabalhadores OR INSS OR licitações)"},
-        {"tipo": "google_busca", "q": "OAB OR CNJ OR \"prazos processuais\" OR \"suspensão de prazos\" OR \"PJe\" OR \"honorários advocatícios\""}
+        {
+          "tipo": "google_busca",
+          "q": "\"repercussão geral\" OR \"recurso repetitivo\" OR \"recursos repetitivos\" OR \"tema repetitivo\" OR \"súmula vinculante\" OR \"modulação de efeitos\""
+        },
+        {
+          "tipo": "google_busca",
+          "q": "(\"lei sancionada\" OR \"sanciona lei\" OR \"medida provisória\" OR \"Diário Oficial\") (empresas OR tributos OR trabalhadores OR INSS OR licitações)"
+        },
+        {
+          "tipo": "google_busca",
+          "q": "OAB OR CNJ OR \"prazos processuais\" OR \"suspensão de prazos\" OR \"PJe\" OR \"honorários advocatícios\""
+        }
       ]
     }
   ],

@@ -139,13 +139,37 @@ def _maiusculas(titulo: str) -> bool:
     return len(letras) >= 15 and sum(c.isupper() for c in letras) / len(letras) > 0.7
 
 
-def descartar(n: Noticia, filtros: dict) -> bool:
-    """Filtros opcionais do perfil: termos proibidos no título e títulos em caixa alta
-    (no perfil jurídico, quase sempre editais e avisos de licitação publicados em jornais)."""
-    t = chave(n.titulo)
-    if any(chave(x) in t for x in filtros.get("excluir_termos", [])):
+def _norm(texto: str) -> str:
+    t = unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode().lower()
+    return " " + re.sub(r"\s+", " ", re.sub(r"[^a-z0-9 ]", " ", t)).strip() + " "
+
+
+def tem_termo(titulo: str, termos: list[str]) -> bool:
+    """Siglas curtas (até 4 letras) valem como palavra inteira; o resto, como início de palavra
+    ("tribut" pega tributário, tributos, tributação)."""
+    t = _norm(titulo)
+    for termo in termos:
+        k = _norm(termo).strip()
+        if k and ((" " + k + " ") in t if len(k) <= 4 else (" " + k) in t):
+            return True
+    return False
+
+
+def descartar(n: Noticia, filtros: dict, exigir: list[str] | None = None) -> bool:
+    """Filtros opcionais do perfil: termos proibidos, títulos em caixa alta (editais e avisos
+    publicados em jornais), títulos curtos demais (páginas de autor, de arquivo) e, por tópico,
+    a exigência de ao menos um termo da área no título."""
+    titulo = n.titulo
+    t = _norm(titulo)
+    if any(_norm(x).strip() in t for x in filtros.get("excluir_termos", [])):
         return True
-    return bool(filtros.get("ignorar_titulos_em_maiusculas")) and _maiusculas(n.titulo)
+    if any(re.search(p, titulo, re.I) for p in filtros.get("excluir_regex", [])):
+        return True
+    if len(t.split()) < int(filtros.get("min_palavras_titulo", 0)):
+        return True
+    if filtros.get("ignorar_titulos_em_maiusculas") and _maiusculas(titulo):
+        return True
+    return bool(exigir) and not tem_termo(titulo, exigir)
 
 
 def _prioridade(n: Noticia, dominios: list[str]) -> int:
@@ -189,7 +213,7 @@ def coletar(
         candidatas.sort(key=lambda n: _prioridade(n, prioritarias))  # estável: mantém a ordem por data
         escolhidas = []
         for n in candidatas:
-            if not janela.contem(n.publicada) or descartar(n, filtros):
+            if not janela.contem(n.publicada) or descartar(n, filtros, topico.get("exigir_no_titulo")):
                 continue
             if todas is not None:
                 todas.append(n)
