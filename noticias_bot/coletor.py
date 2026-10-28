@@ -9,7 +9,7 @@ import unicodedata
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 from typing import Callable
@@ -30,6 +30,16 @@ class Noticia:
     link: str
     fonte: str
     publicada: datetime
+    dominio: str = ""
+    # preenchidos pela análise de credibilidade
+    nivel: str = ""          # "", "atencao", "alto" ou "checagem"
+    motivos: list = field(default_factory=list)
+    checagem: str = ""       # link de checagem relacionada, se houver
+
+
+def _dominio(url: str) -> str:
+    host = urllib.parse.urlparse(url or "").netloc.lower()
+    return host[4:] if host.startswith("www.") else host
 
 
 # ---------------------------------------------------------------- download
@@ -95,11 +105,15 @@ def parse_feed(dados: bytes) -> list[Noticia]:
         titulo = _txt(item, "title")
         src = item.find("source")
         fonte = (src.text or "").strip() if src is not None and src.text else nome_canal
+        link = _txt(item, "link")
+        dominio = _dominio(src.get("url", "")) if src is not None else ""
+        dominio = dominio if dominio and dominio != "news.google.com" else (
+            "" if "news.google.com" in link else _dominio(link))
         if fonte and titulo.endswith(f" - {fonte}"):
             titulo = titulo[: -len(fonte) - 3]
         dt = _data(_txt(item, "pubDate"))
         if titulo and dt:
-            noticias.append(Noticia(titulo, _txt(item, "link"), fonte, dt))
+            noticias.append(Noticia(titulo, link, fonte, dt, dominio))
 
     nome_atom = _txt(raiz, f"{ATOM}title")
     for entry in raiz.iter(f"{ATOM}entry"):  # Atom
@@ -108,7 +122,7 @@ def parse_feed(dados: bytes) -> list[Noticia]:
         dt = _data(_txt(entry, f"{ATOM}published") or _txt(entry, f"{ATOM}updated"))
         titulo = _txt(entry, f"{ATOM}title")
         if titulo and dt:
-            noticias.append(Noticia(titulo, link, nome_atom, dt))
+            noticias.append(Noticia(titulo, link, nome_atom, dt, _dominio(link)))
     return noticias
 
 
@@ -125,11 +139,13 @@ def coletar(
     agora: datetime | None = None,
     baixar_fn: Callable[[str], bytes] = baixar,
     limite_por_topico: int = 40,
+    todas: list | None = None,
 ) -> tuple[list[dict], list[str]]:
     """Retorna ([{nome, emoji, noticias}], [erros]).
 
     A ordem dos tópicos define a prioridade: uma notícia que aparece em dois
-    tópicos fica só no primeiro.
+    tópicos fica só no primeiro. Se `todas` for uma lista, recebe todas as
+    notícias da janela (com repetidas), usada para checar confirmação cruzada.
     """
     agora = agora or datetime.now(janela.fim.tzinfo)
     dias = max(1, math.ceil((agora - janela.inicio).total_seconds() / 86400))
@@ -151,6 +167,8 @@ def coletar(
         for n in candidatas:
             if not janela.contem(n.publicada):
                 continue
+            if todas is not None:
+                todas.append(n)
             k_titulo, k_link = chave(n.titulo), n.link
             if k_titulo in vistos or (k_link and k_link in vistos):
                 continue
@@ -162,3 +180,19 @@ def coletar(
             {"nome": topico["nome"], "emoji": topico.get("emoji", "📌"), "noticias": escolhidas}
         )
     return resultado, erros
+
+
+def coletar_checagens(fontes: list[dict], baixar_fn: Callable[[str], bytes] = baixar,
+                      dias: int = 7) -> tuple[list[Noticia], list[str]]:
+    """Baixa as checagens recentes das agências de fact-checking."""
+    checagens, erros, vistos = [], [], set()
+    for fonte in fontes:
+        try:
+            for n in parse_feed(baixar_fn(url_da_fonte(fonte, dias))):
+                if n.link not in vistos:
+                    vistos.add(n.link)
+                    checagens.append(n)
+        except Exception as e:
+            erros.append(f"Checagens: {e}")
+            log.error("Erro ao buscar checagens: %s", e)
+    return checagens, erros

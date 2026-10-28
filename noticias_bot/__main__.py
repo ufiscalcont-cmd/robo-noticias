@@ -15,8 +15,8 @@ import sys
 from datetime import date, datetime
 from pathlib import Path
 
-from . import envio, formatador
-from .coletor import coletar
+from . import credibilidade, envio, formatador
+from .coletor import coletar, coletar_checagens
 from .janela import janela_atual, janela_especifica, obter_fuso
 
 RAIZ = Path(__file__).resolve().parent.parent
@@ -56,7 +56,7 @@ class Estado:
 
 def avisar(nivel: str, mensagem: str) -> None:
     """Loga e, no GitHub Actions, cria uma anotação visível na página da execução."""
-    log.warning(mensagem) if nivel == "warning" else log.error(mensagem)
+    {"notice": log.info, "warning": log.warning}.get(nivel, log.error)(mensagem)
     if os.environ.get("GITHUB_ACTIONS"):
         print(f"::{nivel}::{mensagem.replace(chr(10), ' ')}", flush=True)
 
@@ -112,7 +112,21 @@ def principal(argv=None, baixar_fn=None, enviar_email_fn=None, enviar_whatsapp_f
         return 0
 
     kwargs = {"baixar_fn": baixar_fn} if baixar_fn else {}
-    resultado, erros = coletar(cfg["topicos"], janela, **kwargs)
+    todas: list = []
+    resultado, erros = coletar(cfg["topicos"], janela, todas=todas, **kwargs)
+
+    arq_cred = RAIZ / "credibilidade.json"
+    if arq_cred.exists() and (env.get("ALERTA_FAKE_NEWS") or "true").lower() not in ("0", "false", "nao", "não"):
+        try:
+            cred = json.loads(arq_cred.read_text(encoding="utf-8"))
+            checagens, erros_chk = coletar_checagens(cred.get("fontes_de_checagem", []), **kwargs)
+            erros += erros_chk
+            n_alertas = credibilidade.avaliar(resultado, todas, checagens, cred)
+            alto, atencao = formatador.alertas(resultado)
+            avisar("notice", f"{formatador.total(resultado)} notícias · alertas de fake news: "
+                             f"{alto} alto risco, {atencao} atenção · {len(checagens)} checagens de referência")
+        except Exception as e:  # a análise nunca pode impedir o envio
+            avisar("warning", f"Análise de fake news falhou, enviando sem ela: {e}")
     log.info("Coletadas %s notícias (%s erro(s) de fonte)", formatador.total(resultado), len(erros))
 
     assunto = formatador.assunto(janela, resultado)

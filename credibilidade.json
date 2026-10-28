@@ -1,0 +1,39 @@
+{
+  "_comentario": "Listas usadas no alerta de fake news. Aceita domínio (ex.: g1.globo.com) ou nome do veículo como aparece no Google News. Edite à vontade.",
+
+  "fontes_confiaveis": [
+    "g1.globo.com", "oglobo.globo.com", "valor.globo.com", "globo.com",
+    "folha.uol.com.br", "uol.com.br", "estadao.com.br", "cnnbrasil.com.br",
+    "agenciabrasil.ebc.com.br", "poder360.com.br", "metropoles.com",
+    "correiobraziliense.com.br", "gazetadopovo.com.br", "cartacapital.com.br",
+    "veja.abril.com.br", "istoe.com.br", "exame.com", "infomoney.com.br",
+    "terra.com.br", "r7.com", "band.uol.com.br", "sbtnews.sbt.com.br",
+    "bbc.com", "reuters.com", "apnews.com", "dw.com", "elpais.com",
+    "jota.info", "conjur.com.br", "migalhas.com.br", "contabeis.com.br",
+    "gov.br", "camara.leg.br", "senado.leg.br", "jus.br",
+    "atarde.com.br", "correio24horas.com.br", "bahianoticias.com.br",
+    "ibahia.com", "infonet.com.br"
+  ],
+
+  "fontes_suspeitas": [],
+
+  "agencias_checagem": [
+    "aosfatos.org", "lupa.uol.com.br", "projetocomprova.com.br", "boatos.org",
+    "e-farsas.com", "checamos.afp.com", "Aos Fatos", "Agência Lupa",
+    "Projeto Comprova", "Boatos.org", "E-farsas", "AFP Checamos"
+  ],
+
+  "termos_sensacionalistas": [
+    "urgente", "bomba", "chocante", "inacreditável", "você não vai acreditar",
+    "compartilhe", "antes que apaguem", "antes que seja apagado",
+    "a mídia esconde", "a mídia não mostra", "a grande mídia", "vazou", "vazado",
+    "eles não querem que você saiba", "a verdade que", "milagre", "cura definitiva",
+    "segredo revelado", "ninguém está falando", "acorda brasil", "espalhe"
+  ],
+
+  "fontes_de_checagem": [
+    {"tipo": "google_busca", "q": "site:aosfatos.org OR site:lupa.uol.com.br OR site:projetocomprova.com.br"},
+    {"tipo": "google_busca", "q": "site:boatos.org OR site:e-farsas.com OR site:checamos.afp.com"},
+    {"tipo": "google_busca", "q": "\"fato ou fake\" OR \"estadão verifica\" OR \"uol confere\" OR \"é falso que\""}
+  ]
+}

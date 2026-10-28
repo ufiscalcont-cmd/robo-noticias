@@ -52,6 +52,32 @@ Pronto. A partir daí roda sozinho às 08h e 20h.
 
 Para máxima confiabilidade no WhatsApp, prefira Z-API ou Evolution; o CallMeBot é gratuito mas tem fila e limite de uso.
 
+## Alerta de possível fake news
+
+Cada notícia recebe uma nota de risco. As de risco alto ou médio chegam marcadas:
+
+| Selo | Significado |
+|---|---|
+| 🔴 **POSSÍVEL FAKE NEWS** | vários sinais de risco juntos |
+| 🟡 **ATENÇÃO** | um ou dois sinais — vale confirmar |
+| 🔎 **CHECAGEM** | a própria notícia é de uma agência de checagem |
+
+Os sinais analisados (`noticias_bot/credibilidade.py`):
+
+- **Fonte** — veículo reconhecido, desconhecido ou da sua lista de suspeitos.
+- **Título** — termos apelativos ("URGENTE", "compartilhe antes que apaguem"…), excesso de maiúsculas e de "!!!".
+- **Confirmação cruzada** — se outros veículos noticiaram o mesmo no período.
+- **Agências de checagem** — compara com as checagens dos últimos 7 dias (Aos Fatos, Lupa, Comprova, Boatos.org, E-farsas, AFP Checamos, Fato ou Fake, Estadão Verifica) e manda o link da checagem.
+
+O motivo do alerta vem escrito logo abaixo da manchete. É uma **triagem automática, não um veredito**: confirme antes de compartilhar.
+
+Ajuste as listas em `credibilidade.json`:
+- `fontes_confiaveis` — adicione portais regionais que você conhece (reduz alertas 🟡 em notícias locais).
+- `fontes_suspeitas` — sites que você quer sempre marcados em 🔴.
+- `termos_sensacionalistas` — expressões que acendem o alerta.
+
+Para desligar a análise, crie a variável `ALERTA_FAKE_NEWS=false`.
+
 ## Personalizar os tópicos
 
 Edite `topicos.json`. A **ordem** define a exibição e a prioridade (se uma notícia cabe em dois tópicos, fica no primeiro).
@@ -85,11 +111,13 @@ Agendamento em servidor Linux (alternativa ao GitHub): copie `deploy/robo-notici
 ```
 noticias_bot/
   janela.py      cálculo das janelas 08h–20h / 20h–08h
+  credibilidade.py  análise de risco de fake news
   coletor.py     download (com tentativas), leitura RSS/Atom, filtro por horário, deduplicação
   formatador.py  texto do WhatsApp (com divisão em partes) e HTML do e-mail
   envio.py       SMTP e provedores de WhatsApp
   __main__.py    orquestração, registro de envio, alertas
 topicos.json     tópicos e fontes
+credibilidade.json  listas de fontes confiáveis/suspeitas, termos e agências de checagem
 data/estado.json registro de edições enviadas
 .github/workflows/noticias.yml   agendamento com reservas
 deploy/          alternativa systemd
