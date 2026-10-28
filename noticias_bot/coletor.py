@@ -35,6 +35,7 @@ class Noticia:
     nivel: str = ""          # "", "atencao", "alto" ou "checagem"
     motivos: list = field(default_factory=list)
     checagem: str = ""       # link de checagem relacionada, se houver
+    anterior: str = ""       # se for desdobramento: edição em que o assunto já saiu
 
 
 def _dominio(url: str) -> str:

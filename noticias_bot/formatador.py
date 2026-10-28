@@ -77,7 +77,10 @@ def texto_whatsapp(janela: Janela, resultado: list[dict], max_por_topico: int = 
         mostrar += [n for n in t["noticias"][max_por_topico:] if n.nivel in ("alto", "atencao")]
         for n in mostrar:
             selo = SELO.get(n.nivel, "•")
-            linhas.append(f"{selo} {_limpo(n.titulo)} — _{_limpo(n.fonte)}_ ({_hora(n, tz)})")
+            novo = "🔄 " if n.anterior else ""
+            linhas.append(f"{selo} {novo}{_limpo(n.titulo)} — _{_limpo(n.fonte)}_ ({_hora(n, tz)})")
+            if n.anterior:
+                linhas.append(f"   ↳ _atualização de assunto da {n.anterior}_")
             if n.nivel in ("alto", "atencao"):
                 rotulo = "POSSÍVEL FAKE NEWS" if n.nivel == "alto" else "atenção"
                 linhas.append(f"   ↳ _{rotulo}: {_limpo('; '.join(n.motivos))}_")
@@ -144,7 +147,11 @@ def texto_email(janela: Janela, resultado: list[dict], erros: list[str] | None =
         linhas += ["", f"== {t['nome'].upper()} ({len(t['noticias'])}) =="]
         for n in t["noticias"]:
             selo = {"alto": "[POSSÍVEL FAKE NEWS] ", "atencao": "[ATENÇÃO] ", "checagem": "[CHECAGEM] "}.get(n.nivel, "")
+            if n.anterior:
+                selo += "[ATUALIZAÇÃO] "
             linhas.append(f"- [{_hora(n, tz)}] {selo}{n.titulo} ({n.fonte})\n  {n.link}")
+            if n.anterior:
+                linhas.append(f"  Desdobramento de assunto publicado na {n.anterior}.")
             if n.nivel in ("alto", "atencao"):
                 linhas.append(f"  Motivo: {'; '.join(n.motivos)}" + (f" | Checagem: {n.checagem}" if n.checagem else ""))
     if any(alertas(resultado)) or verificacao:
@@ -168,6 +175,11 @@ def _item_html(n, tz) -> str:
             link = (f' · <a href="{e(n.checagem)}" style="color:{cor}">ver checagem</a>' if n.checagem else "")
             alerta = (f'<div style="background:{fundo};color:{cor};font-size:12px;padding:6px 8px;'
                       f'border-radius:4px;margin-top:5px">{e("; ".join(n.motivos).capitalize())}{link}</div>')
+    if n.anterior:
+        selo += ('<span style="background:#ede9fe;color:#5b21b6;font-size:11px;font-weight:700;'
+                 'padding:2px 6px;border-radius:4px;margin-right:6px">🔄 ATUALIZAÇÃO</span>')
+        alerta += (f'<div style="color:#5b21b6;font-size:12px;margin-top:4px">'
+                   f'Desdobramento de assunto publicado na {e(n.anterior)}.</div>')
     return (f'<tr><td style="padding:8px 0;border-bottom:1px solid #eef0f3">{selo}'
             f'<a href="{e(n.link)}" style="color:#111827;font-weight:600;text-decoration:none;font-size:15px;line-height:1.35">{e(n.titulo)}</a>'
             f'<div style="color:#6b7280;font-size:12px;margin-top:3px">{e(n.fonte)} · {_hora(n, tz)}</div>{alerta}</td></tr>')

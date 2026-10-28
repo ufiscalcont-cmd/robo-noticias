@@ -17,6 +17,7 @@ from pathlib import Path
 
 from . import credibilidade, envio, formatador, resumo as resumo_mod
 from .coletor import coletar, coletar_checagens
+from .historico import Historico
 from .janela import janela_atual, janela_especifica, obter_fuso
 
 RAIZ = Path(__file__).resolve().parent.parent
@@ -115,6 +116,12 @@ def principal(argv=None, baixar_fn=None, enviar_email_fn=None, enviar_whatsapp_f
     todas: list = []
     resultado, erros = coletar(cfg["topicos"], janela, todas=todas, **kwargs)
 
+    # não repete notícias de edições anteriores (só desdobramentos, marcados)
+    historico = Historico(Path(env.get("ARQUIVO_HISTORICO") or RAIZ / "data" / "historico.json"))
+    removidas, atualizacoes = historico.filtrar(resultado, janela.id)
+    avisar("notice", f"Histórico: {removidas} notícia(s) já enviadas foram retiradas; "
+                     f"{atualizacoes} desdobramento(s) marcados como atualização")
+
     verificacao = None
     arq_cred = RAIZ / "credibilidade.json"
     if arq_cred.exists() and (env.get("ALERTA_FAKE_NEWS") or "true").lower() not in ("0", "false", "nao", "não"):
@@ -163,6 +170,7 @@ def principal(argv=None, baixar_fn=None, enviar_email_fn=None, enviar_whatsapp_f
     enviar_email_fn = enviar_email_fn or envio.enviar_email
     enviar_whatsapp_fn = enviar_whatsapp_fn or envio.enviar_whatsapp
     falhas = {}
+    historico_salvo = False
     for canal in pendentes:
         try:
             if canal == "email":
@@ -172,6 +180,10 @@ def principal(argv=None, baixar_fn=None, enviar_email_fn=None, enviar_whatsapp_f
             else:
                 raise RuntimeError(f"Canal desconhecido: {canal}")
             estado.marcar(janela.id, canal)
+            if not historico_salvo:  # registra o que os leitores receberam
+                historico.registrar(resultado, janela.id)
+                historico.salvar()
+                historico_salvo = True
         except Exception as e:
             log.exception("Falha no canal %s", canal)
             falhas[canal] = str(e)

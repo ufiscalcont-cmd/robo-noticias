@@ -65,6 +65,12 @@ Nos dois casos, notícias com alerta de fake news ficam de fora, e as **Referên
 
 Variáveis opcionais: `RESUMO=sem_ia` (nunca usa IA) ou `RESUMO=nao` (desliga); `RESUMO_MODELO` para trocar o modelo (padrão: gemini-flash-latest).
 
+## Sem notícias repetidas entre edições
+
+O robô guarda em `data/historico.json` as notícias enviadas nos últimos 15 dias. A cada edição:
+- mesma notícia (mesmo link, mesmo título ou título praticamente igual) → **não é enviada de novo**;
+- mesmo assunto com fato novo (aprovação, adiamento, decisão, prisão, números novos…) → entra com o selo **🔄 ATUALIZAÇÃO** e a indicação da edição em que o assunto saiu antes.
+
 ## Alerta de possível fake news
 
 Cada notícia recebe uma nota de risco. As de risco alto ou médio chegam marcadas:
@@ -132,6 +138,7 @@ noticias_bot/
 topicos.json     tópicos e fontes
 credibilidade.json  listas de fontes confiáveis/suspeitas, termos e agências de checagem
 data/estado.json registro de edições enviadas
+data/historico.json notícias já enviadas (evita repetição)
 .github/workflows/noticias.yml   agendamento com reservas
 deploy/          alternativa systemd
 tests/           testes automatizados
