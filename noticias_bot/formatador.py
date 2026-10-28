@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import html
+import re
 
 from .janela import Janela
 
@@ -40,12 +41,18 @@ def assunto(janela: Janela, resultado: list[dict]) -> str:
 
 # ---------------------------------------------------------------- WhatsApp
 def texto_whatsapp(janela: Janela, resultado: list[dict], max_por_topico: int = 6,
-                   incluir_links: bool = False, erros: list[str] | None = None) -> str:
+                   incluir_links: bool = False, erros: list[str] | None = None,
+                   resumo: dict | None = None) -> str:
     tz = janela.fim.tzinfo
     linhas = [f"📰 *NOTÍCIAS uFISCAL — {janela.edicao.upper()}*", f"🗓️ {janela.descricao}"]
     alto, atencao = alertas(resultado)
     if alto or atencao:
         linhas.append(f"⚠️ *Possíveis fake news:* 🔴 {alto} alto risco · 🟡 {atencao} atenção")
+    if resumo:
+        linhas += ["", f"✍️ *{_limpo(resumo['titulo']).upper()}*" if resumo.get("titulo") else "✍️ *PANORAMA*"]
+        for par in resumo["paragrafos"]:
+            linhas += ["", _limpo(par)]
+        linhas += ["", "_Referências (ABNT) no e-mail._", "", "━━━━━━━━━━━━━━━"]
     for t in resultado:
         if not t["noticias"]:
             continue
@@ -105,9 +112,15 @@ def dividir(texto: str, limite: int) -> list[str]:
 
 
 # ------------------------------------------------------------------ e-mail
-def texto_email(janela: Janela, resultado: list[dict], erros: list[str] | None = None) -> str:
+def texto_email(janela: Janela, resultado: list[dict], erros: list[str] | None = None,
+                resumo: dict | None = None) -> str:
     tz = janela.fim.tzinfo
     linhas = [f"NOTÍCIAS uFISCAL — {janela.edicao.upper()}", janela.descricao]
+    if resumo:
+        linhas += ["", (resumo.get("titulo") or "Panorama").upper(), ""]
+        linhas += [f"    {par}" for par in resumo["paragrafos"]]
+        if resumo.get("referencias"):
+            linhas += ["", "REFERÊNCIAS", ""] + [r.replace("**", "") for r in resumo["referencias"]]
     for t in resultado:
         if not t["noticias"]:
             continue
@@ -146,8 +159,29 @@ def _item_html(n, tz) -> str:
 LOGO_CID = "logo-ufiscal"
 
 
+def _resumo_html(resumo: dict | None) -> str:
+    if not resumo:
+        return ""
+    e = html.escape
+    pars = "".join(
+        f'<p style="margin:0 0 12px;text-indent:1.25cm;text-align:justify;font:16px/1.65 Georgia,\'Times New Roman\',serif;color:#1f2937">{e(p)}</p>'
+        for p in resumo["paragrafos"])
+    refs = ""
+    if resumo.get("referencias"):
+        itens = "".join(
+            '<p style="margin:0 0 8px;text-align:left;font:12px/1.45 Georgia,serif;color:#4b5563;word-break:break-word">'
+            + re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", e(r)) + "</p>"
+            for r in resumo["referencias"])
+        refs = (f'<div style="margin-top:16px;padding-top:12px;border-top:1px solid #e5e7eb">'
+                f'<div style="text-align:center;font:700 12px Arial,sans-serif;letter-spacing:.08em;color:#374151;margin-bottom:10px">REFERÊNCIAS</div>{itens}</div>')
+    titulo = e(resumo.get("titulo") or "Panorama")
+    return (f'<div style="margin-top:20px;padding:20px 22px;background:#fbf8f1;border-left:4px solid {OURO};border-radius:6px">'
+            f'<div style="font:700 11px Arial,sans-serif;letter-spacing:.14em;color:{OURO};text-transform:uppercase;margin-bottom:6px">Panorama da edição</div>'
+            f'<h2 style="margin:0 0 14px;font:700 22px/1.3 Georgia,serif;color:{PRETO}">{titulo}</h2>{pars}{refs}</div>')
+
+
 def html_email(janela: Janela, resultado: list[dict], erros: list[str] | None = None,
-               logo_src: str = f"cid:{LOGO_CID}") -> str:
+               logo_src: str = f"cid:{LOGO_CID}", resumo: dict | None = None) -> str:
     tz = janela.fim.tzinfo
     e = html.escape
     indice = " · ".join(
@@ -190,7 +224,9 @@ def html_email(janela: Janela, resultado: list[dict], erros: list[str] | None = 
 <div style="font-size:12px;letter-spacing:.08em;color:{OURO};text-transform:uppercase;font-weight:700">{e(janela.edicao)}</div>
 <div style="color:#374151;font-size:14px">{e(janela.descricao)} · <b>{total(resultado)}</b> notícias</div>
 {resumo_alerta}
-<div style="margin-top:14px;font-size:13px;line-height:1.9">{indice}</div>
+{_resumo_html(resumo)}
+<div style="margin-top:22px;font:700 11px Arial,sans-serif;letter-spacing:.14em;color:{OURO};text-transform:uppercase">Notícias por tópico</div>
+<div style="margin-top:6px;font-size:13px;line-height:1.9">{indice}</div>
 {''.join(secoes)}{legenda}{aviso}
 <p style="color:#9ca3af;font-size:11px;margin-top:28px">{MARCA} · enviado automaticamente · uFiscal — {SLOGAN}</p>
 </td></tr></table></td></tr></table></body></html>"""

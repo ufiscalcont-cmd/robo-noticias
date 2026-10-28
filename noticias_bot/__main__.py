@@ -15,7 +15,7 @@ import sys
 from datetime import date, datetime
 from pathlib import Path
 
-from . import credibilidade, envio, formatador
+from . import credibilidade, envio, formatador, resumo as resumo_mod
 from .coletor import coletar, coletar_checagens
 from .janela import janela_atual, janela_especifica, obter_fuso
 
@@ -132,12 +132,21 @@ def principal(argv=None, baixar_fn=None, enviar_email_fn=None, enviar_whatsapp_f
             avisar("warning", f"Análise de fake news falhou, enviando sem ela: {e}")
     log.info("Coletadas %s notícias (%s erro(s) de fonte)", formatador.total(resultado), len(erros))
 
+    resumo = None
+    try:
+        resumo = resumo_mod.gerar(env, janela, resultado, todas)
+        if resumo:
+            avisar("notice", f"Resumo {resumo['origem']}: {sum(len(p.split()) for p in resumo['paragrafos'])} palavras, "
+                             f"{len(resumo['referencias'])} referência(s)")
+    except Exception as e:  # o resumo nunca pode impedir o envio
+        avisar("warning", f"Resumo não gerado, enviando sem ele: {e}")
+
     assunto = formatador.assunto(janela, resultado)
-    html = formatador.html_email(janela, resultado, erros)
-    texto_mail = formatador.texto_email(janela, resultado, erros)
+    html = formatador.html_email(janela, resultado, erros, resumo=resumo)
+    texto_mail = formatador.texto_email(janela, resultado, erros, resumo)
     texto_wpp = formatador.texto_whatsapp(
         janela, resultado, int(cfg.get("max_por_topico_whatsapp", 6)),
-        env.get("WHATSAPP_LINKS", "").lower() in ("1", "true", "sim"), erros)
+        env.get("WHATSAPP_LINKS", "").lower() in ("1", "true", "sim"), erros, resumo)
     partes = formatador.dividir(texto_wpp, envio.limite_whatsapp(env))
 
     if args.simular:

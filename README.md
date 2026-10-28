@@ -54,6 +54,17 @@ Pronto. A partir daí roda sozinho às 08h e 20h.
 
 Para máxima confiabilidade no WhatsApp, prefira Z-API ou Evolution; o CallMeBot é gratuito mas tem fila e limite de uso.
 
+## Panorama da edição (resumo)
+
+Antes da lista de notícias vem um resumo geral, gratuito:
+
+1. **Com IA gratuita do GitHub (GitHub Models)** — texto jornalístico redigido a partir das manchetes, na norma-padrão, com atribuição às fontes. Não precisa de chave nem cartão: usa a permissão `models: read` do próprio Actions.
+2. **Sem IA (plano B automático)** — se a IA estiver indisponível ou no limite diário, o robô monta o resumo com as manchetes mais repercutidas, citadas entre aspas e atribuídas aos veículos.
+
+Nos dois casos, notícias com alerta de fake news ficam de fora, e as **Referências** seguem a ABNT NBR 6023:2018, geradas pelo código a partir dos dados reais de cada notícia.
+
+Variáveis opcionais: `RESUMO=sem_ia` (nunca usa IA) ou `RESUMO=nao` (desliga); `RESUMO_MODELO` para trocar o modelo.
+
 ## Alerta de possível fake news
 
 Cada notícia recebe uma nota de risco. As de risco alto ou médio chegam marcadas:
