@@ -85,6 +85,9 @@ def _chamar_api(env: dict, mensagem: str, modelo: str) -> str:
         except urllib.error.HTTPError as e:  # mostra o motivo real (ex.: 401, 403, 429)
             erros.append(f"{url.split('/')[2]} HTTP {e.code}: {e.read().decode(errors='replace')[:200]}")
             continue
+        except Exception as e:
+            erros.append(f"{url.split('/')[2]}: {e}")
+            continue
         try:
             dados = json.loads(bruto)
             break
