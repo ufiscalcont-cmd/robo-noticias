@@ -48,7 +48,7 @@ jobs:
 
       - name: Coletar e enviar
         env:
-          CANAIS: ${{ vars.CANAIS || 'email,whatsapp' }}
+          CANAIS: ${{ vars.CANAIS || 'email' }}
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORTA: ${{ secrets.SMTP_PORTA }}
           SMTP_USUARIO: ${{ secrets.SMTP_USUARIO }}

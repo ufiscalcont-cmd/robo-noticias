@@ -76,7 +76,7 @@ def principal(argv=None, baixar_fn=None, enviar_email_fn=None, enviar_whatsapp_f
         janela = janela_atual(tz=tz)
     log.info("Janela %s: %s", janela.id, janela.descricao)
 
-    canais = [c.strip() for c in (args.canais or (env.get("CANAIS") or "email,whatsapp")).split(",") if c.strip()]
+    canais = [c.strip() for c in (args.canais or (env.get("CANAIS") or "email")).split(",") if c.strip()]
     estado = Estado(Path((env.get("ARQUIVO_ESTADO") or RAIZ / "data" / "estado.json")))
     pendentes = [c for c in canais if args.forcar or args.simular or not estado.enviado(janela.id, c)]
     if not pendentes:
