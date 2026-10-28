@@ -13,9 +13,11 @@
 from __future__ import annotations
 
 import json
+import os
 import logging
 import re
 import time
+import urllib.error
 import urllib.request
 from datetime import datetime
 
@@ -71,8 +73,11 @@ def _chamar_api(env: dict, mensagem: str, modelo: str) -> str:
         API_URL, data=json.dumps(corpo).encode(), method="POST",
         headers={"Authorization": f"Bearer {env['GITHUB_TOKEN']}", "Content-Type": "application/json",
                  "Accept": "application/json"})
-    with urllib.request.urlopen(req, timeout=120) as resp:
-        dados = json.loads(resp.read())
+    try:
+        with urllib.request.urlopen(req, timeout=120) as resp:
+            dados = json.loads(resp.read())
+    except urllib.error.HTTPError as e:  # mostra o motivo real (ex.: 401, 403, 429)
+        raise RuntimeError(f"HTTP {e.code}: {e.read().decode(errors='replace')[:300]}") from None
     return dados["choices"][0]["message"]["content"]
 
 
@@ -233,4 +238,6 @@ def gerar(env: dict, janela: Janela, resultado: list[dict], todas: list | None =
                 return r
         except Exception as e:
             log.warning("Usando resumo sem IA: %s", e)
+            if os.environ.get("GITHUB_ACTIONS"):
+                print(f"::warning::IA do resumo indisponível, usado plano B: {str(e)[:400]}", flush=True)
     return sem_ia(janela, resultado, todas or [n for t in resultado for n in t["noticias"]])
