@@ -99,6 +99,9 @@ class TestCredibilidade(unittest.TestCase):
         self.assertIn("🔴", wpp)
         self.assertIn("POSSÍVEL FAKE NEWS", wpp)
         self.assertIn("POSSÍVEL FAKE NEWS", formatador.html_email(j, res))
+        v = {"analisadas": 1, "checagens": 5}
+        self.assertIn("🔴 1 alto risco", formatador.html_email(j, res, verificacao=v))
+        self.assertIn("Verificação de fake news", formatador.texto_whatsapp(j, res, verificacao=v))
 
 
 if __name__ == "__main__":

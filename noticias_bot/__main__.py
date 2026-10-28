@@ -115,6 +115,7 @@ def principal(argv=None, baixar_fn=None, enviar_email_fn=None, enviar_whatsapp_f
     todas: list = []
     resultado, erros = coletar(cfg["topicos"], janela, todas=todas, **kwargs)
 
+    verificacao = None
     arq_cred = RAIZ / "credibilidade.json"
     if arq_cred.exists() and (env.get("ALERTA_FAKE_NEWS") or "true").lower() not in ("0", "false", "nao", "não"):
         try:
@@ -122,6 +123,7 @@ def principal(argv=None, baixar_fn=None, enviar_email_fn=None, enviar_whatsapp_f
             checagens, erros_chk = coletar_checagens(cred.get("fontes_de_checagem", []), **kwargs)
             erros += erros_chk
             n_alertas = credibilidade.avaliar(resultado, todas, checagens, cred)
+            verificacao = {"analisadas": formatador.total(resultado), "checagens": len(checagens)}
             alto, atencao = formatador.alertas(resultado)
             marcadas = [n for t in resultado for n in t["noticias"] if n.nivel in ("alto", "atencao")]
             for n in marcadas[:10]:
@@ -142,11 +144,11 @@ def principal(argv=None, baixar_fn=None, enviar_email_fn=None, enviar_whatsapp_f
         avisar("warning", f"Resumo não gerado, enviando sem ele: {e}")
 
     assunto = formatador.assunto(janela, resultado)
-    html = formatador.html_email(janela, resultado, erros, resumo=resumo)
-    texto_mail = formatador.texto_email(janela, resultado, erros, resumo)
+    html = formatador.html_email(janela, resultado, erros, resumo=resumo, verificacao=verificacao)
+    texto_mail = formatador.texto_email(janela, resultado, erros, resumo, verificacao)
     texto_wpp = formatador.texto_whatsapp(
         janela, resultado, int(cfg.get("max_por_topico_whatsapp", 6)),
-        env.get("WHATSAPP_LINKS", "").lower() in ("1", "true", "sim"), erros, resumo)
+        env.get("WHATSAPP_LINKS", "").lower() in ("1", "true", "sim"), erros, resumo, verificacao)
     partes = formatador.dividir(texto_wpp, envio.limite_whatsapp(env))
 
     if args.simular:

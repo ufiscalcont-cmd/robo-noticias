@@ -137,6 +137,9 @@ class TestFluxoCompleto(unittest.TestCase):
 
             self.assertEqual(rodar(), 1)            # WhatsApp falhou
             self.assertEqual(len(emails), 2)        # resumo + alerta de falha
+            html_enviado = emails[0][3]
+            self.assertIn("Verificação de fake news", html_enviado)   # sempre presente
+            self.assertIn("Nenhum sinal de fake news", html_enviado)
             wpp_quebrado["sim"] = False
             self.assertEqual(rodar(), 0)            # reserva: só o WhatsApp
             self.assertEqual((len(emails), len(wpps)), (2, 1))

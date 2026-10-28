@@ -26,6 +26,18 @@ LEGENDA = ("Alertas automáticos de possível fake news, baseados na fonte, no t
            "Não são veredito: confirme antes de compartilhar.")
 
 
+def frase_verificacao(resultado: list[dict], verificacao: dict | None) -> str:
+    """Resumo da verificação, exibido em TODA edição (com ou sem alertas)."""
+    if not verificacao:
+        return ""
+    alto, atencao = alertas(resultado)
+    base = (f"{verificacao['analisadas']} notícias analisadas e comparadas com "
+            f"{verificacao['checagens']} checagens recentes")
+    if alto or atencao:
+        return f"{base}: 🔴 {alto} alto risco · 🟡 {atencao} atenção (marcadas abaixo)."
+    return f"{base}. Nenhum sinal de fake news nesta edição."
+
+
 def alertas(resultado: list[dict]) -> tuple[int, int]:
     todas = [n for t in resultado for n in t["noticias"]]
     return (sum(n.nivel == "alto" for n in todas), sum(n.nivel == "atencao" for n in todas))
@@ -42,11 +54,14 @@ def assunto(janela: Janela, resultado: list[dict]) -> str:
 # ---------------------------------------------------------------- WhatsApp
 def texto_whatsapp(janela: Janela, resultado: list[dict], max_por_topico: int = 6,
                    incluir_links: bool = False, erros: list[str] | None = None,
-                   resumo: dict | None = None) -> str:
+                   resumo: dict | None = None, verificacao: dict | None = None) -> str:
     tz = janela.fim.tzinfo
     linhas = [f"📰 *NOTÍCIAS uFISCAL — {janela.edicao.upper()}*", f"🗓️ {janela.descricao}"]
     alto, atencao = alertas(resultado)
-    if alto or atencao:
+    if verificacao:
+        icone = "⚠️" if (alto or atencao) else "✅"
+        linhas.append(f"{icone} *Verificação de fake news:* {frase_verificacao(resultado, verificacao)}")
+    elif alto or atencao:
         linhas.append(f"⚠️ *Possíveis fake news:* 🔴 {alto} alto risco · 🟡 {atencao} atenção")
     if resumo:
         linhas += ["", f"✍️ *{_limpo(resumo['titulo']).upper()}*" if resumo.get("titulo") else "✍️ *PANORAMA*"]
@@ -77,7 +92,7 @@ def texto_whatsapp(janela: Janela, resultado: list[dict], max_por_topico: int = 
         linhas += ["", "Nenhuma notícia encontrada nesta janela."]
     if erros:
         linhas += ["", f"⚠️ {len(erros)} fonte(s) com falha na coleta."]
-    if alto or atencao:
+    if alto or atencao or verificacao:
         linhas += ["", f"_🔴 alto risco · 🟡 atenção · 🔎 checagem — {LEGENDA}_"]
     linhas += ["", f"_Total: {total(resultado)} notícias · lista completa com links no e-mail_"]
     return "\n".join(linhas)
@@ -113,9 +128,11 @@ def dividir(texto: str, limite: int) -> list[str]:
 
 # ------------------------------------------------------------------ e-mail
 def texto_email(janela: Janela, resultado: list[dict], erros: list[str] | None = None,
-                resumo: dict | None = None) -> str:
+                resumo: dict | None = None, verificacao: dict | None = None) -> str:
     tz = janela.fim.tzinfo
     linhas = [f"NOTÍCIAS uFISCAL — {janela.edicao.upper()}", janela.descricao]
+    if verificacao:
+        linhas += ["", f"VERIFICAÇÃO DE FAKE NEWS: {frase_verificacao(resultado, verificacao)}"]
     if resumo:
         linhas += ["", (resumo.get("titulo") or "Panorama").upper(), ""]
         linhas += [f"    {par}" for par in resumo["paragrafos"]]
@@ -130,7 +147,7 @@ def texto_email(janela: Janela, resultado: list[dict], erros: list[str] | None =
             linhas.append(f"- [{_hora(n, tz)}] {selo}{n.titulo} ({n.fonte})\n  {n.link}")
             if n.nivel in ("alto", "atencao"):
                 linhas.append(f"  Motivo: {'; '.join(n.motivos)}" + (f" | Checagem: {n.checagem}" if n.checagem else ""))
-    if any(alertas(resultado)):
+    if any(alertas(resultado)) or verificacao:
         linhas += ["", LEGENDA]
     if erros:
         linhas += ["", "Falhas na coleta:"] + [f"- {e}" for e in erros]
@@ -181,7 +198,8 @@ def _resumo_html(resumo: dict | None) -> str:
 
 
 def html_email(janela: Janela, resultado: list[dict], erros: list[str] | None = None,
-               logo_src: str = f"cid:{LOGO_CID}", resumo: dict | None = None) -> str:
+               logo_src: str = f"cid:{LOGO_CID}", resumo: dict | None = None,
+               verificacao: dict | None = None) -> str:
     tz = janela.fim.tzinfo
     e = html.escape
     indice = " · ".join(
@@ -202,10 +220,17 @@ def html_email(janela: Janela, resultado: list[dict], erros: list[str] | None = 
         secoes.append('<p style="color:#6b7280">Nenhuma notícia encontrada nesta janela.</p>')
     alto, atencao = alertas(resultado)
     resumo_alerta = legenda = ""
-    if alto or atencao:
+    if verificacao:
+        fundo, borda, cor, icone = (("#fff7ed", "#fdba74", "#9a3412", "⚠️") if (alto or atencao)
+                                    else ("#f0fdf4", "#86efac", "#166534", "✅"))
+        resumo_alerta = (f'<div style="margin-top:12px;background:{fundo};border:1px solid {borda};border-radius:6px;'
+                         f'padding:8px 12px;font-size:13px;color:{cor}">{icone} <b>Verificação de fake news:</b> '
+                         f'{e(frase_verificacao(resultado, verificacao))}</div>')
+    elif alto or atencao:
         resumo_alerta = (f'<div style="margin-top:12px;background:#fff7ed;border:1px solid #fdba74;border-radius:6px;'
                          f'padding:8px 12px;font-size:13px;color:#9a3412">⚠️ <b>Possíveis fake news nesta edição:</b> '
                          f'🔴 {alto} alto risco · 🟡 {atencao} atenção</div>')
+    if alto or atencao or verificacao:
         legenda = f'<p style="color:#6b7280;font-size:12px;margin-top:20px">🔴 alto risco · 🟡 atenção · 🔎 checagem — {e(LEGENDA)}</p>'
     aviso = ""
     if erros:
