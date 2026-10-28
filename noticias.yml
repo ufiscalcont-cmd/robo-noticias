@@ -1,0 +1,88 @@
+name: Robô de Notícias
+
+# Horários em UTC (Brasília = UTC-3, sem horário de verão):
+#   20:00 BRT = 23:00 UTC   |   08:00 BRT = 11:00 UTC
+# O GitHub às vezes atrasa ou pula agendamentos, então há execuções de reserva.
+# O arquivo data/estado.json garante que cada edição seja enviada uma única vez:
+# as reservas só agem se a principal falhou ou não rodou.
+on:
+  schedule:
+    - cron: "2 23 * * *"    # 20:02 — edição da noite
+    - cron: "20 23 * * *"   # 20:20 — reserva
+    - cron: "45 23 * * *"   # 20:45 — reserva
+    - cron: "30 0 * * *"    # 21:30 — última reserva
+    - cron: "2 11 * * *"    # 08:02 — edição da manhã
+    - cron: "20 11 * * *"   # 08:20 — reserva
+    - cron: "45 11 * * *"   # 08:45 — reserva
+    - cron: "30 12 * * *"   # 09:30 — última reserva
+  workflow_dispatch:
+    inputs:
+      data:
+        description: "Dia da edição (AAAA-MM-DD) — vazio = automático"
+        required: false
+      edicao:
+        description: "08h ou 20h — vazio = automático"
+        required: false
+      forcar:
+        description: "Reenviar mesmo se já enviado"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: robo-noticias
+  cancel-in-progress: false
+
+jobs:
+  enviar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Coletar e enviar
+        env:
+          CANAIS: ${{ vars.CANAIS || 'email,whatsapp' }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORTA: ${{ secrets.SMTP_PORTA }}
+          SMTP_USUARIO: ${{ secrets.SMTP_USUARIO }}
+          SMTP_SENHA: ${{ secrets.SMTP_SENHA }}
+          EMAIL_DESTINO: ${{ secrets.EMAIL_DESTINO }}
+          EMAIL_REMETENTE: ${{ secrets.EMAIL_REMETENTE }}
+          WHATSAPP_PROVEDOR: ${{ secrets.WHATSAPP_PROVEDOR }}
+          WHATSAPP_NUMERO: ${{ secrets.WHATSAPP_NUMERO }}
+          WHATSAPP_LINKS: ${{ vars.WHATSAPP_LINKS }}
+          CALLMEBOT_APIKEY: ${{ secrets.CALLMEBOT_APIKEY }}
+          ZAPI_INSTANCIA: ${{ secrets.ZAPI_INSTANCIA }}
+          ZAPI_TOKEN: ${{ secrets.ZAPI_TOKEN }}
+          ZAPI_CLIENT_TOKEN: ${{ secrets.ZAPI_CLIENT_TOKEN }}
+          EVOLUTION_URL: ${{ secrets.EVOLUTION_URL }}
+          EVOLUTION_INSTANCIA: ${{ secrets.EVOLUTION_INSTANCIA }}
+          EVOLUTION_APIKEY: ${{ secrets.EVOLUTION_APIKEY }}
+        run: |
+          ARGS=""
+          if [ -n "${{ inputs.data }}" ] && [ -n "${{ inputs.edicao }}" ]; then
+            ARGS="--data ${{ inputs.data }} --edicao ${{ inputs.edicao }}"
+          fi
+          if [ "${{ inputs.forcar }}" = "true" ]; then ARGS="$ARGS --forcar"; fi
+          python -m noticias_bot $ARGS
+
+      # Salva o registro de envios (mesmo se um canal falhou) e mantém o
+      # repositório ativo — o GitHub desliga agendamentos após 60 dias parado.
+      - name: Salvar estado
+        if: always()
+        run: |
+          git config user.name "robo-noticias"
+          git config user.email "robo-noticias@users.noreply.github.com"
+          git add data/estado.json
+          if ! git diff --cached --quiet; then
+            git commit -m "estado: envio $(date -u +%FT%TZ)"
+            git pull --rebase origin "${GITHUB_REF_NAME}" || true
+            git push
+          fi

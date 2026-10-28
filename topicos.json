@@ -1,0 +1,60 @@
+{
+  "max_por_topico_whatsapp": 6,
+  "_comentario": "A ordem dos tópicos é a ordem de exibição E de prioridade: notícia repetida fica no primeiro tópico. Tipos de fonte: google_busca (q), google_topico (id: NATION, WORLD, BUSINESS, TECHNOLOGY, SPORTS, HEALTH, SCIENCE, ENTERTAINMENT), google_destaques, rss (url).",
+  "topicos": [
+    {
+      "nome": "Tributos e Contabilidade",
+      "emoji": "🧾",
+      "fontes": [
+        {"tipo": "google_busca", "q": "\"reforma tributária\" OR \"Receita Federal\" OR \"Simples Nacional\" OR IBS OR CBS OR \"imposto de renda\""},
+        {"tipo": "google_busca", "q": "contabilidade OR eSocial OR SPED OR \"split payment\" OR CFC contador"}
+      ]
+    },
+    {
+      "nome": "Bahia e Sergipe",
+      "emoji": "📍",
+      "fontes": [
+        {"tipo": "google_busca", "q": "Bahia OR Salvador OR Sergipe OR Aracaju"}
+      ]
+    },
+    {
+      "nome": "Economia",
+      "emoji": "💰",
+      "fontes": [
+        {"tipo": "google_topico", "id": "BUSINESS"},
+        {"tipo": "google_busca", "q": "Selic OR inflação OR IPCA OR dólar OR Ibovespa"}
+      ]
+    },
+    {
+      "nome": "Política e Brasil",
+      "emoji": "🇧🇷",
+      "fontes": [
+        {"tipo": "google_topico", "id": "NATION"},
+        {"tipo": "google_destaques"}
+      ]
+    },
+    {
+      "nome": "Mundo",
+      "emoji": "🌎",
+      "fontes": [{"tipo": "google_topico", "id": "WORLD"}]
+    },
+    {
+      "nome": "Tecnologia",
+      "emoji": "💻",
+      "fontes": [{"tipo": "google_topico", "id": "TECHNOLOGY"}]
+    },
+    {
+      "nome": "Saúde e Ciência",
+      "emoji": "🩺",
+      "fontes": [
+        {"tipo": "google_topico", "id": "HEALTH"},
+        {"tipo": "google_topico", "id": "SCIENCE"}
+      ]
+    },
+    {
+      "nome": "Esportes",
+      "emoji": "⚽",
+      "fontes": [{"tipo": "google_topico", "id": "SPORTS"}]
+    }
+  ]
+}
