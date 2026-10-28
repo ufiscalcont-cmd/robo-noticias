@@ -226,7 +226,7 @@ class TestFiltrosDoPerfil(unittest.TestCase):
     def test_agrupa_noticias_parecidas(self):
         feed = ("<rss><channel>"
                 + item("CVM multa Cerveró em R$ 16 milhões no caso Pasadena", "Valor", "Wed, 28 Oct 2026 15:00:00 GMT")
-                + item("CVM condena Cerveró por caso Pasadena e aplica multa", "O Globo", "Wed, 28 Oct 2026 14:00:00 GMT")
+                + item("CVM condena Nestor Cerveró, ex-Petrobras, no caso Pasadena", "O Globo", "Wed, 28 Oct 2026 14:00:00 GMT")
                 + item("Justiça decreta falência do Grupo X", "Conjur", "Wed, 28 Oct 2026 13:00:00 GMT")
                 + "</channel></rss>").encode()
         j = janela_especifica(HOJE, "20h", TZ)

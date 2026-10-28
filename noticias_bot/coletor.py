@@ -224,7 +224,7 @@ def coletar(
             if filtros.get("agrupar_parecidas"):  # mesmo fato contado por vários veículos: fica o 1º
                 from .credibilidade import _parecido, _tokens
                 tk = _tokens(n.titulo)
-                if any(_parecido(tk, outro, minimo=3, proporcao=0.6) for outro in ja_escolhidas):
+                if any(_parecido(tk, outro, minimo=4, proporcao=0.5) for outro in ja_escolhidas):
                     continue
                 ja_escolhidas.append(tk)
             vistos.update({k_titulo, k_link})
