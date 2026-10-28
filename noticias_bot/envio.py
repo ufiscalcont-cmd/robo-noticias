@@ -46,7 +46,7 @@ def lista_emails(texto: str | None) -> list[str]:
 
 
 def enviar_email(env: dict, assunto: str, texto: str, html: str,
-                 destinatarios: list[str] | None = None) -> None:
+                 destinatarios: list[str] | None = None) -> int:
     """Envia com os destinatários em cópia oculta (Cco): ninguém vê quem mais recebe."""
     _exigir(env, "SMTP_USUARIO", "SMTP_SENHA")
     destinos = destinatarios or lista_emails(env.get("EMAIL_DESTINO"))
@@ -81,6 +81,7 @@ def enviar_email(env: dict, assunto: str, texto: str, html: str,
 
     _com_tentativas(_enviar, "E-mail")
     log.info("E-mail enviado em cópia oculta para %s destinatário(s)", len(destinos))
+    return len(destinos)
 
 
 # ---------------------------------------------------------------- WhatsApp

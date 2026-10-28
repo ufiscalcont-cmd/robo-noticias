@@ -174,7 +174,9 @@ def principal(argv=None, baixar_fn=None, enviar_email_fn=None, enviar_whatsapp_f
     for canal in pendentes:
         try:
             if canal == "email":
-                enviar_email_fn(env, assunto, texto_mail, html)
+                qtd = enviar_email_fn(env, assunto, texto_mail, html)
+                if isinstance(qtd, int):
+                    avisar("notice", f"E-mail entregue ao servidor para {qtd} destinatário(s), em cópia oculta")
             elif canal == "whatsapp":
                 enviar_whatsapp_fn(env, partes)
             else:
