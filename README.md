@@ -143,3 +143,14 @@ data/historico.json notícias já enviadas (evita repetição)
 deploy/          alternativa systemd
 tests/           testes automatizados
 ```
+
+## ⚖️ Jurídico uFiscal (segundo robô, mesmo motor)
+
+Boletim só com notícias jurídicas para advocacia **tributária, trabalhista, previdenciária, administrativa (licitações) e empresarial**, mais um tópico de **Tribunais, Leis e Prática** (repercussão geral, repetitivos, súmulas, leis e MPs, prazos, PJe, OAB/CNJ). Sai às **08h07** e **20h07**, com as mesmas reservas e garantias do Notícias uFiscal.
+
+- **Configuração:** `perfis/juridico.json` (tópicos, buscas, termos exigidos no título de cada área, filtros e o texto-guia do resumo).
+- **Destinatários:** secret `EMAIL_DESTINO_JURIDICO` (vários e-mails, todos em cópia oculta). Enquanto ele não existir, o boletim vai só para o administrador (`EMAIL_ADMIN` ou o próprio remetente).
+- **Registro de envios:** `data/juridico/`, separado do robô de notícias.
+- **Qualidade:** portais jurídicos (Conjur, Migalhas, JOTA, tribunais, gov.br) aparecem primeiro; editais e avisos de licitação publicados em jornais, páginas de arquivo e de autor são descartados; a mesma notícia contada por vários veículos aparece uma vez só.
+- **Teste:** Actions → **Jurídico uFiscal** → Run workflow (marque *simular* para não enviar; a prévia fica no ramo `previa-juridico`).
+- **Limite do Gmail:** os dois robôs usam o mesmo remetente e somam no limite de ~500 destinatários por dia.
