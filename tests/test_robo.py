@@ -204,3 +204,14 @@ class TestEmailOculto(unittest.TestCase):
         self.assertEqual(msg["Bcc"], "a@x.com, b@y.com, c@z.com")
         self.assertNotIn("a@x.com", msg["To"])
         self.assertIn("Notícias uFiscal", msg["From"])
+
+
+class TestFiltrosDoPerfil(unittest.TestCase):
+    def test_descarta_editais_e_caixa_alta(self):
+        from noticias_bot.coletor import Noticia, descartar
+        f = app.carregar_perfil("juridico")["filtros"]
+        n = lambda t: Noticia(t, "https://x", "Jornal", em(HOJE, 10))
+        self.assertTrue(descartar(n("PREFEITURA MUNICIPAL DE X. PROCESSO LICITATÓRIO Nº 074/2026"), f))
+        self.assertTrue(descartar(n("Aviso de Licitação - Pregão Eletrônico nº 12/2026"), f))
+        self.assertFalse(descartar(n("STJ decide que ICMS não integra base do PIS em operação X"), f))
+        self.assertFalse(descartar(n("TCU suspende licitação de R$ 2 bi do DNIT"), f))

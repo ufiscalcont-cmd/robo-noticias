@@ -134,6 +134,25 @@ def chave(titulo: str) -> str:
 
 
 # ------------------------------------------------------------------ coleta
+def _maiusculas(titulo: str) -> bool:
+    letras = [c for c in titulo if c.isalpha()]
+    return len(letras) >= 15 and sum(c.isupper() for c in letras) / len(letras) > 0.7
+
+
+def descartar(n: Noticia, filtros: dict) -> bool:
+    """Filtros opcionais do perfil: termos proibidos no título e títulos em caixa alta
+    (no perfil jurídico, quase sempre editais e avisos de licitação publicados em jornais)."""
+    t = chave(n.titulo)
+    if any(chave(x) in t for x in filtros.get("excluir_termos", [])):
+        return True
+    return bool(filtros.get("ignorar_titulos_em_maiusculas")) and _maiusculas(n.titulo)
+
+
+def _prioridade(n: Noticia, dominios: list[str]) -> int:
+    d = (n.dominio or "").lower()
+    return 0 if any(d == x or d.endswith("." + x) for x in dominios) else 1
+
+
 def coletar(
     topicos: list[dict],
     janela: Janela,
@@ -141,6 +160,7 @@ def coletar(
     baixar_fn: Callable[[str], bytes] = baixar,
     limite_por_topico: int = 40,
     todas: list | None = None,
+    filtros: dict | None = None,
 ) -> tuple[list[dict], list[str]]:
     """Retorna ([{nome, emoji, noticias}], [erros]).
 
@@ -163,10 +183,13 @@ def coletar(
                 erros.append(f"{topico['nome']}: {e}")
                 log.error("Erro na fonte %s: %s", url, e)
 
+        filtros = filtros or {}
+        prioritarias = [x.lower() for x in filtros.get("fontes_prioritarias", [])]
         candidatas.sort(key=lambda n: n.publicada, reverse=True)
+        candidatas.sort(key=lambda n: _prioridade(n, prioritarias))  # estável: mantém a ordem por data
         escolhidas = []
         for n in candidatas:
-            if not janela.contem(n.publicada):
+            if not janela.contem(n.publicada) or descartar(n, filtros):
                 continue
             if todas is not None:
                 todas.append(n)

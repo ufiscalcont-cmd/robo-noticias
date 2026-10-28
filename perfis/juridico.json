@@ -4,7 +4,13 @@
   "rotulo": "Jurídico",
   "emoji": "⚖️",
   "unidade": "notícias jurídicas",
-  "limite_por_topico": 25,
+  "limite_por_topico": 15,
+  "filtros": {
+    "_comentario": "fontes_prioritarias aparecem primeiro em cada tópico; títulos com excluir_termos e títulos em caixa alta (editais publicados em jornais) são descartados.",
+    "fontes_prioritarias": ["conjur.com.br", "migalhas.com.br", "jota.info", "jus.br", "gov.br", "camara.leg.br", "senado.leg.br", "oab.org.br", "contabeis.com.br", "valor.globo.com", "agenciabrasil.ebc.com.br", "jusbrasil.com.br"],
+    "excluir_termos": ["aviso de licitação", "aviso de pregão", "extrato de contrato", "extrato do contrato", "termo de homologação", "termo aditivo nº", "apostila ao contrato", "edital de convocação", "edital de citação", "edital de intimação", "resultado de julgamento", "processo licitatório nº", "pregão eletrônico nº", "dispensa nº", "inexigibilidade nº", "concorrência nº", "tomada de preços nº", "chamamento público nº", "horóscopo", "loteria", "mega-sena"],
+    "ignorar_titulos_em_maiusculas": true
+  },
   "max_por_topico_whatsapp": 6,
   "topicos": [
     {

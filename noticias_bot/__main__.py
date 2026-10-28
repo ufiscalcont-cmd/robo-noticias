@@ -133,7 +133,8 @@ def principal(argv=None, baixar_fn=None, enviar_email_fn=None, enviar_whatsapp_f
     kwargs = {"baixar_fn": baixar_fn} if baixar_fn else {}
     todas: list = []
     resultado, erros = coletar(cfg["topicos"], janela, todas=todas,
-                               limite_por_topico=int(cfg.get("limite_por_topico", 40)), **kwargs)
+                               limite_por_topico=int(cfg.get("limite_por_topico", 40)),
+                               filtros=cfg.get("filtros"), **kwargs)
     avisar("notice", "Por tópico: " + " · ".join(f"{t['nome']} {len(t['noticias'])}" for t in resultado))
 
     # não repete notícias de edições anteriores (só desdobramentos, marcados)
@@ -180,7 +181,7 @@ def principal(argv=None, baixar_fn=None, enviar_email_fn=None, enviar_whatsapp_f
 
     if args.simular:
         saida = RAIZ / "saida" / perfil if perfil else RAIZ / "saida"
-        saida.mkdir(exist_ok=True)
+        saida.mkdir(parents=True, exist_ok=True)
         (saida / f"{janela.id}_email.html").write_text(
             html.replace("cid:logo-ufiscal", ("../" if not perfil else "../../") + "assets/logo-ufiscal.png"), encoding="utf-8")
         (saida / f"{janela.id}_whatsapp.txt").write_text("\n\n-----\n\n".join(partes), encoding="utf-8")
