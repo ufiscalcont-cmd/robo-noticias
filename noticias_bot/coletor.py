@@ -196,6 +196,7 @@ def coletar(
     dias = max(1, math.ceil((agora - janela.inicio).total_seconds() / 86400))
     vistos: set[str] = set()
     resultado, erros = [], []
+    ja_escolhidas: list[set] = []   # tokens dos títulos já escolhidos (para agrupar parecidas)
 
     for topico in topicos:
         candidatas: list[Noticia] = []
@@ -220,6 +221,12 @@ def coletar(
             k_titulo, k_link = chave(n.titulo), n.link
             if k_titulo in vistos or (k_link and k_link in vistos):
                 continue
+            if filtros.get("agrupar_parecidas"):  # mesmo fato contado por vários veículos: fica o 1º
+                from .credibilidade import _parecido, _tokens
+                tk = _tokens(n.titulo)
+                if any(_parecido(tk, outro, minimo=3, proporcao=0.6) for outro in ja_escolhidas):
+                    continue
+                ja_escolhidas.append(tk)
             vistos.update({k_titulo, k_link})
             escolhidas.append(n)
             if len(escolhidas) >= limite_por_topico:

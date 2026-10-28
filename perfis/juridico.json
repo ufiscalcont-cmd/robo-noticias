@@ -42,7 +42,21 @@
       "chamamento público nº",
       "horóscopo",
       "loteria",
-      "mega-sena"
+      "mega-sena",
+      "falência múltipla",
+      "Até Que a Sorte",
+      "filme",
+      "elenco",
+      "novela",
+      "vaga de estágio",
+      "processo seletivo",
+      "seleção para estágio",
+      "Fenalaw",
+      "brindes",
+      "descontos exclusivos",
+      "Prêmio",
+      "inscrições abertas",
+      "aniversário"
     ],
     "ignorar_titulos_em_maiusculas": true,
     "excluir_regex": [
@@ -52,7 +66,8 @@
       "\\blança(m)? (livro|obra|novas edi)",
       "^Livro "
     ],
-    "min_palavras_titulo": 5
+    "min_palavras_titulo": 5,
+    "agrupar_parecidas": true
   },
   "max_por_topico_whatsapp": 6,
   "topicos": [
@@ -169,10 +184,8 @@
       "exigir_no_titulo": [
         "INSS",
         "previd",
-        "aposentad",
         "BPC",
         "LOAS",
-        "auxílio",
         "pensão por morte",
         "perícia",
         "segurad",
@@ -185,7 +198,19 @@
         "revisão da vida toda",
         "pente-fino",
         "Dataprev",
-        "CNIS"
+        "CNIS",
+        "aposentadoria especial",
+        "aposentadoria por",
+        "aposentadoria do servidor",
+        "regras de aposentadoria",
+        "regra de aposentadoria",
+        "tempo de contribuição",
+        "auxílio-doença",
+        "auxílio por incapacidade",
+        "auxílio-acidente",
+        "auxílio-reclusão",
+        "beneficiári",
+        "benefício"
       ],
       "fontes": [
         {
@@ -231,7 +256,6 @@
         "desapropria",
         "processo administrativo",
         "Direito Administrativo",
-        "responsabilidade fiscal",
         "sobrepreço",
         "superfaturamento"
       ],
@@ -262,7 +286,6 @@
         "recuperação judicial",
         "recuperação extrajudicial",
         "recuperanda",
-        "falência",
         "falido",
         "credores",
         "societári",
@@ -288,7 +311,17 @@
         "contrato empresarial",
         "dissolução",
         "assembleia de credores",
-        "Cade"
+        "Cade",
+        "decreta falência",
+        "decretação de falência",
+        "pedido de falência",
+        "pede falência",
+        "Lei de Falências",
+        "falência do",
+        "falência da",
+        "falência de",
+        "reestrutura",
+        "B3"
       ],
       "fontes": [
         {

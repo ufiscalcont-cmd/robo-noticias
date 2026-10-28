@@ -222,3 +222,16 @@ class TestFiltrosDoPerfil(unittest.TestCase):
         self.assertTrue(tem_termo("Tributação de dividendos avança", ["tribut"]))
         self.assertFalse(tem_termo("Comissão aprova projeto", ["iss"]))      # sigla curta = palavra inteira
         self.assertFalse(tem_termo("Leilão de imóveis", ["lei"]))
+
+    def test_agrupa_noticias_parecidas(self):
+        feed = ("<rss><channel>"
+                + item("CVM multa Cerveró em R$ 16 milhões no caso Pasadena", "Valor", "Wed, 28 Oct 2026 15:00:00 GMT")
+                + item("CVM condena Cerveró por caso Pasadena e aplica multa", "O Globo", "Wed, 28 Oct 2026 14:00:00 GMT")
+                + item("Justiça decreta falência do Grupo X", "Conjur", "Wed, 28 Oct 2026 13:00:00 GMT")
+                + "</channel></rss>").encode()
+        j = janela_especifica(HOJE, "20h", TZ)
+        topico = [{"nome": "E", "fontes": [{"tipo": "rss", "url": "x"}]}]
+        r, _ = coletar(topico, j, agora=em(HOJE, 20), baixar_fn=lambda u: feed, filtros={"agrupar_parecidas": True})
+        self.assertEqual(len(r[0]["noticias"]), 2)
+        r, _ = coletar(topico, j, agora=em(HOJE, 20), baixar_fn=lambda u: feed)
+        self.assertEqual(len(r[0]["noticias"]), 3)   # sem a opção, comportamento antigo
