@@ -29,6 +29,10 @@ on:
         description: "Reenviar mesmo se já enviado"
         type: boolean
         default: false
+      simular:
+        description: "Só simular (não envia nada)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -71,11 +75,13 @@ jobs:
           ENTRADA_DATA: ${{ inputs.data }}
           ENTRADA_EDICAO: ${{ inputs.edicao }}
           ENTRADA_FORCAR: ${{ inputs.forcar }}
+          ENTRADA_SIMULAR: ${{ inputs.simular }}
         run: |
           ARGS=()
           if [ -n "$ENTRADA_DATA" ]; then ARGS+=(--data "$ENTRADA_DATA"); fi
           if [ -n "$ENTRADA_EDICAO" ]; then ARGS+=(--edicao "$ENTRADA_EDICAO"); fi
           if [ "$ENTRADA_FORCAR" = "true" ]; then ARGS+=(--forcar); fi
+          if [ "$ENTRADA_SIMULAR" = "true" ]; then ARGS+=(--simular); fi
           python -m noticias_bot "${ARGS[@]}"
 
       # Salva o registro de envios (mesmo se um canal falhou) e mantém o

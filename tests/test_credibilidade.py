@@ -35,17 +35,30 @@ class TestCredibilidade(unittest.TestCase):
         self.assertEqual(a.nivel, "alto")
         self.assertTrue(any("apelativos" in m for m in a.motivos))
 
-    def test_desconhecida_isolada_pede_atencao(self):
+    def test_desconhecida_isolada_sem_sinal_concreto_nao_alerta(self):
         a = n("Prefeitura anuncia nova feira de artesanato no centro", "Portal X", "portalx.com.br")
         self.rodar([a])
-        self.assertEqual(a.nivel, "atencao")
-        self.assertIn("nenhum outro veículo noticiou", a.motivos)
+        self.assertEqual(a.nivel, "")
+
+    def test_titulo_exagerado_depende_da_fonte(self):
+        a = n("Prefeitura anuncia nova feira de artesanato no centro!!", "Portal X", "portalx.com.br")
+        self.rodar([a])
+        self.assertEqual(a.nivel, "alto")  # desconhecida + isolada + exagero = 3
+        b = n("Prefeitura anuncia feira no centro!!", "g1", "g1.globo.com")
+        self.rodar([b])
+        self.assertEqual(b.nivel, "")      # confiável −1 + exagero 1 = 0
 
     def test_desconhecida_confirmada_por_confiavel_sem_alerta(self):
         a = n("Prefeitura anuncia nova feira de artesanato no centro", "Portal X", "portalx.com.br")
         b = n("Prefeitura anuncia feira de artesanato no centro da cidade", "g1", "g1.globo.com")
         self.rodar([a], extras=[b])
         self.assertEqual(a.nivel, "")
+
+    def test_desconhecida_apelativa_confirmada_sem_alerta(self):
+        a = n("URGENTE: prefeitura anuncia feira de artesanato no centro", "Portal X", "portalx.com.br")
+        b = n("Prefeitura anuncia feira de artesanato no centro da cidade", "UOL", "uol.com.br")
+        self.rodar([a], extras=[b])
+        self.assertEqual(a.nivel, "")      # 1 + 1 − 1 = 1: confirmada por veículo reconhecido
 
     def test_bate_com_checagem(self):
         a = n("Governo vai taxar transferências via Pix a partir de janeiro", "Portal Y", "portaly.net")

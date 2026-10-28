@@ -11,6 +11,8 @@ Pontuação (quanto maior, mais suspeita):
   confirmada por veículo reconhecido ..... −1
   assunto parecido com checagem recente .. +3
 Nível: 3 ou mais = 🔴 alto risco · 2 = 🟡 atenção · até 1 = sem alerta.
+Só há alerta se existir ao menos um sinal concreto (site suspeito, título
+apelativo ou checagem relacionada): fonte pouco conhecida sozinha não basta.
 """
 from __future__ import annotations
 
@@ -111,7 +113,9 @@ def avaliar(resultado: list[dict], todas: list[Noticia], checagens: list[Noticia
                 risco += 1
                 motivos.append("fonte não reconhecida")
 
+            concreto = susp
             sens = _sensacionalismo(n.titulo, termos)
+            concreto = concreto or bool(sens)
             if sens:
                 risco += min(2, len(sens))
                 motivos += sens
@@ -132,9 +136,10 @@ def avaliar(resultado: list[dict], todas: list[Noticia], checagens: list[Noticia
                     risco += 3
                     motivos.append(f"assunto parecido já foi checado por {c.fonte}")
                     n.checagem = c.link
+                    concreto = True
                     break
 
             n.motivos = motivos
-            n.nivel = "alto" if risco >= 3 else "atencao" if risco == 2 else ""
+            n.nivel = "" if not concreto else "alto" if risco >= 3 else "atencao" if risco >= 2 else ""
             alertas += n.nivel in ("alto", "atencao")
     return alertas

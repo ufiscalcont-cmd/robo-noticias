@@ -123,6 +123,9 @@ def principal(argv=None, baixar_fn=None, enviar_email_fn=None, enviar_whatsapp_f
             erros += erros_chk
             n_alertas = credibilidade.avaliar(resultado, todas, checagens, cred)
             alto, atencao = formatador.alertas(resultado)
+            marcadas = [n for t in resultado for n in t["noticias"] if n.nivel in ("alto", "atencao")]
+            for n in marcadas[:10]:
+                avisar("notice", f"[{n.nivel}] {n.fonte} ({n.dominio}): {n.titulo[:90]} — {'; '.join(n.motivos)}")
             avisar("notice", f"{formatador.total(resultado)} notícias · alertas de fake news: "
                              f"{alto} alto risco, {atencao} atenção · {len(checagens)} checagens de referência")
         except Exception as e:  # a análise nunca pode impedir o envio
