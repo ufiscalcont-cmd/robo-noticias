@@ -15,6 +15,10 @@ def _limpo(texto: str) -> str:
     return texto.replace("*", "").replace("_", " ").replace("~", "")
 
 
+MARCA = "Notícias uFiscal"
+SLOGAN = "Inteligência em negócios"
+OURO, PRETO = "#B8962E", "#111111"
+
 SELO = {"alto": "🔴", "atencao": "🟡", "checagem": "🔎"}
 LEGENDA = ("Alertas automáticos de possível fake news, baseados na fonte, no tom do título, "
            "na confirmação por outros veículos e em agências de checagem. "
@@ -31,14 +35,14 @@ def total(resultado: list[dict]) -> int:
 
 
 def assunto(janela: Janela, resultado: list[dict]) -> str:
-    return f"📰 Notícias · {janela.edicao} · {janela.descricao} · {total(resultado)} itens"
+    return f"📰 {MARCA} · {janela.edicao} · {janela.descricao} · {total(resultado)} itens"
 
 
 # ---------------------------------------------------------------- WhatsApp
 def texto_whatsapp(janela: Janela, resultado: list[dict], max_por_topico: int = 6,
                    incluir_links: bool = False, erros: list[str] | None = None) -> str:
     tz = janela.fim.tzinfo
-    linhas = [f"📰 *RESUMO DE NOTÍCIAS — {janela.edicao.upper()}*", f"🗓️ {janela.descricao}"]
+    linhas = [f"📰 *NOTÍCIAS uFISCAL — {janela.edicao.upper()}*", f"🗓️ {janela.descricao}"]
     alto, atencao = alertas(resultado)
     if alto or atencao:
         linhas.append(f"⚠️ *Possíveis fake news:* 🔴 {alto} alto risco · 🟡 {atencao} atenção")
@@ -103,7 +107,7 @@ def dividir(texto: str, limite: int) -> list[str]:
 # ------------------------------------------------------------------ e-mail
 def texto_email(janela: Janela, resultado: list[dict], erros: list[str] | None = None) -> str:
     tz = janela.fim.tzinfo
-    linhas = [f"RESUMO DE NOTÍCIAS — {janela.edicao.upper()}", janela.descricao]
+    linhas = [f"NOTÍCIAS uFISCAL — {janela.edicao.upper()}", janela.descricao]
     for t in resultado:
         if not t["noticias"]:
             continue
@@ -143,7 +147,7 @@ def html_email(janela: Janela, resultado: list[dict], erros: list[str] | None = 
     tz = janela.fim.tzinfo
     e = html.escape
     indice = " · ".join(
-        f'<a href="#t{i}" style="color:#1d4ed8;text-decoration:none">{e(t["emoji"])} {e(t["nome"])} ({len(t["noticias"])})</a>'
+        f'<a href="#t{i}" style="color:{PRETO};text-decoration:none;border-bottom:1px solid {OURO}">{e(t["emoji"])} {e(t["nome"])} ({len(t["noticias"])})</a>'
         for i, t in enumerate(resultado) if t["noticias"]
     )
     secoes = []
@@ -152,7 +156,7 @@ def html_email(janela: Janela, resultado: list[dict], erros: list[str] | None = 
             continue
         itens = "".join(_item_html(n, tz) for n in t["noticias"])
         secoes.append(
-            f'<h2 id="t{i}" style="font-size:17px;margin:28px 0 6px;padding-bottom:6px;border-bottom:2px solid #1d4ed8;color:#1d4ed8">'
+            f'<h2 id="t{i}" style="font-size:17px;margin:28px 0 6px;padding-bottom:6px;border-bottom:2px solid {OURO};color:{PRETO}">'
             f'{e(t["emoji"])} {e(t["nome"])} <span style="color:#9ca3af;font-weight:400">({len(t["noticias"])})</span></h2>'
             f'<table role="presentation" width="100%" cellspacing="0" cellpadding="0">{itens}</table>'
         )
@@ -170,14 +174,19 @@ def html_email(janela: Janela, resultado: list[dict], erros: list[str] | None = 
         lista = "".join(f"<li>{e(x)}</li>" for x in erros)
         aviso = (f'<div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:6px;padding:10px 14px;'
                  f'margin-top:24px;font-size:13px"><b>⚠️ Falhas na coleta</b><ul style="margin:6px 0 0 18px;padding:0">{lista}</ul></div>')
-    return f"""<!doctype html><html lang="pt-BR"><body style="margin:0;background:#f3f4f6;font-family:Segoe UI,Arial,sans-serif">
+    return f"""<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;background:#f3f4f6;font-family:Segoe UI,Arial,sans-serif">
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center" style="padding:20px 10px">
-<table role="presentation" width="640" style="max-width:640px;width:100%;background:#fff;border-radius:10px" cellspacing="0" cellpadding="0"><tr><td style="padding:24px 28px">
-<div style="font-size:12px;letter-spacing:.08em;color:#6b7280;text-transform:uppercase">{e(janela.edicao)}</div>
-<h1 style="margin:4px 0 2px;font-size:24px;color:#111827">Resumo de Notícias</h1>
+<table role="presentation" width="640" style="max-width:640px;width:100%;background:#fff;border-radius:10px;overflow:hidden" cellspacing="0" cellpadding="0">
+<tr><td style="background:{PRETO};padding:20px 28px;border-bottom:3px solid {OURO}">
+<table role="presentation" cellspacing="0" cellpadding="0"><tr>
+<td style="width:44px;height:44px;border:2px solid {OURO};border-radius:8px;text-align:center;vertical-align:middle;color:{OURO};font:700 20px Georgia,serif">uF</td>
+<td style="padding-left:14px"><div style="color:#fff;font-size:21px;font-weight:700">{MARCA}</div>
+<div style="color:{OURO};font-size:12px;letter-spacing:.06em">{SLOGAN}</div></td></tr></table></td></tr>
+<tr><td style="padding:22px 28px 24px">
+<div style="font-size:12px;letter-spacing:.08em;color:{OURO};text-transform:uppercase;font-weight:700">{e(janela.edicao)}</div>
 <div style="color:#374151;font-size:14px">{e(janela.descricao)} · <b>{total(resultado)}</b> notícias</div>
 {resumo_alerta}
 <div style="margin-top:14px;font-size:13px;line-height:1.9">{indice}</div>
 {''.join(secoes)}{legenda}{aviso}
-<p style="color:#9ca3af;font-size:11px;margin-top:28px">Enviado automaticamente pelo Robô de Notícias.</p>
+<p style="color:#9ca3af;font-size:11px;margin-top:28px">{MARCA} · enviado automaticamente · uFiscal — {SLOGAN}</p>
 </td></tr></table></td></tr></table></body></html>"""

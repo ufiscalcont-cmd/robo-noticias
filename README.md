@@ -1,4 +1,4 @@
-# 📰 Robô de Notícias
+# 📰 Notícias uFiscal
 
 Coleta as notícias do período, organiza por tópicos e envia por **e-mail** e **WhatsApp** duas vezes por dia (horário de Brasília):
 
@@ -38,7 +38,7 @@ Coleta as notícias do período, organiza por tópicos e envia por **e-mail** e 
    - mais as chaves do provedor escolhido (veja abaixo)
 
 3. Em **Settings → Actions → General → Workflow permissions**, marque **Read and write permissions** (para salvar o registro de envio).
-4. Teste agora: **Actions → Robô de Notícias → Run workflow**.
+4. Teste agora: **Actions → Notícias uFiscal → Run workflow**.
 
 Pronto. A partir daí roda sozinho às 08h e 20h.
 

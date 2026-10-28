@@ -100,7 +100,7 @@ class TestFormatacao(unittest.TestCase):
 
     def test_whatsapp(self):
         t = formatador.texto_whatsapp(self.j, self.res)
-        self.assertIn("*TRIBUTOS* (2)", t)
+        self.assertIn("*TRIBUTOS* (2)", t); self.assertIn("NOTÍCIAS uFISCAL", t)
         self.assertIn("(19:59)", t)  # horário convertido para Brasília
 
     def test_dividir_respeita_limite(self):

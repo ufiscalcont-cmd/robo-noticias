@@ -9,7 +9,7 @@ Pontuação (quanto maior, mais suspeita):
   título sensacionalista ................. +1 a +2
   ninguém mais noticiou (fonte não reconhecida) +1
   confirmada por veículo reconhecido ..... −1
-  assunto parecido com checagem recente .. +3
+  assunto parecido com checagem recente .. +3   (só para fontes não reconhecidas)
 Nível: 3 ou mais = 🔴 alto risco · 2 = 🟡 atenção · até 1 = sem alerta.
 Só há alerta se existir ao menos um sinal concreto (site suspeito, título
 apelativo ou checagem relacionada): fonte pouco conhecida sozinha não basta.
@@ -130,9 +130,10 @@ def avaliar(resultado: list[dict], todas: list[Noticia], checagens: list[Noticia
                 elif not susp and any(_na_lista(m, confiaveis) for m in outras):
                     risco -= 1
 
+            # veículo reconhecido cobrindo um tema que também foi checado não é sinal de fake
             tk_sem = _tokens(n.titulo, True)
-            for c, ct in checks:
-                if _parecido(tk_sem, ct, minimo=3, proporcao=0.6):
+            for c, ct in ([] if conf else checks):
+                if _parecido(tk_sem, ct, minimo=4, proporcao=0.6):
                     risco += 3
                     motivos.append(f"assunto parecido já foi checado por {c.fonte}")
                     n.checagem = c.link

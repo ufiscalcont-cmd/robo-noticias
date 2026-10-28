@@ -67,6 +67,12 @@ class TestCredibilidade(unittest.TestCase):
         self.assertEqual(a.nivel, "alto")
         self.assertEqual(a.checagem, "https://aosfatos.org/x")
 
+    def test_confiavel_com_tema_checado_nao_alerta(self):
+        a = n("Governo vai taxar transferências via Pix a partir de janeiro", "Estadão", "estadao.com.br")
+        chk = n("É falso que governo vai taxar transferências via Pix em janeiro", "Aos Fatos", "aosfatos.org")
+        self.rodar([a], checagens=[chk])
+        self.assertEqual(a.nivel, "")
+
     def test_noticia_de_checagem_recebe_selo(self):
         a = n("É falso que vacina altera DNA", "Agência Lupa", "lupa.uol.com.br")
         self.rodar([a])

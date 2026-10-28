@@ -166,7 +166,7 @@ def principal(argv=None, baixar_fn=None, enviar_email_fn=None, enviar_whatsapp_f
             avisar("error", f"Falha no envio por {canal}: {e}")
 
     if falhas:  # avisa pelo canal que funcionou, e sai com erro (o agendador tenta de novo)
-        alerta = f"⚠️ Robô de Notícias: falha ao enviar {janela.id} por {', '.join(falhas)}: " + \
+        alerta = f"⚠️ Notícias uFiscal: falha ao enviar {janela.id} por {', '.join(falhas)}: " + \
                  "; ".join(f"{c}: {m[:200]}" for c, m in falhas.items())
         for canal in [c for c in canais if c not in falhas]:
             try:
