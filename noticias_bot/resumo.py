@@ -26,7 +26,8 @@ from .janela import Janela
 
 log = logging.getLogger(__name__)
 
-API_URL = "https://models.github.ai/inference/chat/completions"
+API_URLS = ["https://models.github.ai/inference/chat/completions",
+            "https://models.inference.ai.azure.com/chat/completions"]
 MODELOS_PADRAO = ["openai/gpt-4o", "openai/gpt-4o-mini"]
 MESES = ["jan.", "fev.", "mar.", "abr.", "maio", "jun.", "jul.", "ago.", "set.", "out.", "nov.", "dez."]
 
@@ -69,15 +70,28 @@ def _chamar_api(env: dict, mensagem: str, modelo: str) -> str:
     corpo = {"model": modelo, "temperature": 0.4, "max_tokens": 1500,
              "messages": [{"role": "system", "content": SISTEMA},
                           {"role": "user", "content": mensagem}]}
-    req = urllib.request.Request(
-        API_URL, data=json.dumps(corpo).encode(), method="POST",
-        headers={"Authorization": f"Bearer {env['GITHUB_TOKEN']}", "Content-Type": "application/json",
-                 "Accept": "application/json"})
-    try:
-        with urllib.request.urlopen(req, timeout=120) as resp:
-            dados = json.loads(resp.read())
-    except urllib.error.HTTPError as e:  # mostra o motivo real (ex.: 401, 403, 429)
-        raise RuntimeError(f"HTTP {e.code}: {e.read().decode(errors='replace')[:300]}") from None
+    erros = []
+    for url in API_URLS:
+        corpo_url = dict(corpo, model=modelo if "github.ai" in url else modelo.split("/")[-1])
+        req = urllib.request.Request(
+            url, data=json.dumps(corpo_url).encode(), method="POST",
+            headers={"Authorization": f"Bearer {env['GITHUB_TOKEN']}", "Content-Type": "application/json",
+                     "Accept": "application/json", "User-Agent": "noticias-ufiscal"})
+        try:
+            with urllib.request.urlopen(req, timeout=120) as resp:
+                bruto = resp.read().decode(errors="replace")
+                tipo = resp.headers.get("Content-Type", "")
+                status = resp.status
+        except urllib.error.HTTPError as e:  # mostra o motivo real (ex.: 401, 403, 429)
+            erros.append(f"{url.split('/')[2]} HTTP {e.code}: {e.read().decode(errors='replace')[:200]}")
+            continue
+        try:
+            dados = json.loads(bruto)
+            break
+        except ValueError:
+            erros.append(f"{url.split('/')[2]} HTTP {status} {tipo}: {bruto[:200]!r}")
+    else:
+        raise RuntimeError(" | ".join(erros))
     return dados["choices"][0]["message"]["content"]
 
 
