@@ -60,6 +60,12 @@ class TestCredibilidade(unittest.TestCase):
         self.rodar([a], extras=[b])
         self.assertEqual(a.nivel, "")      # 1 + 1 − 1 = 1: confirmada por veículo reconhecido
 
+    def test_maiusculas_sozinhas_nao_alertam(self):
+        a = n("IMÓVEIS EM SALVADOR ACUMULAM ALTA DE 16,22% EM 12 MESES, APONTA ÍNDICE",
+              "Bahia Econômica", "bahiaeconomica.com.br")
+        self.rodar([a])
+        self.assertEqual(a.nivel, "")
+
     def test_bate_com_checagem(self):
         a = n("Governo vai taxar transferências via Pix a partir de janeiro", "Portal Y", "portaly.net")
         chk = n("É falso que governo vai taxar transferências via Pix em janeiro", "Aos Fatos", "aosfatos.org")

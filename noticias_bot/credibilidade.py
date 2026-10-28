@@ -115,7 +115,8 @@ def avaliar(resultado: list[dict], todas: list[Noticia], checagens: list[Noticia
 
             concreto = susp
             sens = _sensacionalismo(n.titulo, termos)
-            concreto = concreto or bool(sens)
+            # maiúsculas sozinhas são estilo de alguns portais, não indício concreto
+            concreto = concreto or any(not x.startswith("título quase todo") for x in sens)
             if sens:
                 risco += min(2, len(sens))
                 motivos += sens

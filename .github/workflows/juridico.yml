@@ -104,6 +104,9 @@ jobs:
           git add data/juridico/ 2>/dev/null || true
           if ! git diff --cached --quiet; then
             git commit -m "estado jurídico: envio $(date -u +%FT%TZ)"
-            git pull --rebase origin "${GITHUB_REF_NAME}" || true
-            git push
+            # tenta até 5 vezes: outro robô pode ter gravado ao mesmo tempo
+            for i in 1 2 3 4 5; do
+              git pull --rebase -q origin "${GITHUB_REF_NAME}" && git push -q && break
+              echo "Gravação recusada, tentando de novo ($i/5)"; sleep $((i * 5))
+            done
           fi
