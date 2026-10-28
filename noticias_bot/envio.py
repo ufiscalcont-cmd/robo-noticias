@@ -54,7 +54,7 @@ def enviar_email(env: dict, assunto: str, texto: str, html: str,
         raise RuntimeError("Configuração ausente: EMAIL_DESTINO")
     host = (env.get("SMTP_HOST") or "smtp.gmail.com")
     porta = int((env.get("SMTP_PORTA") or "465"))
-    remetente = env.get("EMAIL_REMETENTE") or formataddr(("Notícias uFiscal", env["SMTP_USUARIO"]))
+    remetente = env.get("EMAIL_REMETENTE") or formataddr((env.get("NOME_REMETENTE") or "Notícias uFiscal", env["SMTP_USUARIO"]))
     msg = EmailMessage()
     msg["Subject"] = assunto
     msg["From"] = remetente

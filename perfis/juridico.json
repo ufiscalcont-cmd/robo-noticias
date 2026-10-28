@@ -1,0 +1,74 @@
+{
+  "_comentario": "Perfil do robô Jurídico uFiscal. A ordem dos tópicos é a ordem de exibição E de prioridade: notícia que aparece em dois tópicos fica só no primeiro. Em cada busca, OR une alternativas e parênteses agrupam; site: restringe a um portal. 'abertura' é a expressão usada no Panorama (resumo sem IA).",
+  "marca": "Jurídico uFiscal",
+  "rotulo": "Jurídico",
+  "emoji": "⚖️",
+  "unidade": "notícias jurídicas",
+  "limite_por_topico": 25,
+  "max_por_topico_whatsapp": 6,
+  "topicos": [
+    {
+      "nome": "Direito Tributário",
+      "emoji": "🧾",
+      "abertura": "No Direito Tributário",
+      "fontes": [
+        {"tipo": "google_busca", "q": "(STF OR STJ OR CARF OR TRF OR TJ) (tributário OR tributária OR tributo OR ICMS OR PIS OR Cofins OR IRPJ OR ISS)"},
+        {"tipo": "google_busca", "q": "\"execução fiscal\" OR \"transação tributária\" OR \"planejamento tributário\" OR \"compensação tributária\" OR \"contencioso tributário\" OR PGFN"},
+        {"tipo": "google_busca", "q": "\"reforma tributária\" (regulamentação OR \"Comitê Gestor\" OR \"Imposto Seletivo\" OR \"split payment\" OR \"lei complementar\" OR transição)"},
+        {"tipo": "google_busca", "q": "(tributário OR tributária OR tributo) (site:conjur.com.br OR site:migalhas.com.br OR site:jota.info)"}
+      ]
+    },
+    {
+      "nome": "Direito do Trabalho",
+      "emoji": "👷",
+      "abertura": "Na esfera trabalhista",
+      "fontes": [
+        {"tipo": "google_busca", "q": "TST OR \"Justiça do Trabalho\" OR \"direito trabalhista\" OR \"reclamação trabalhista\" OR \"vínculo empregatício\" OR \"rescisão indireta\""},
+        {"tipo": "google_busca", "q": "pejotização OR \"escala 6x1\" OR \"NR-1\" OR \"acordo coletivo\" OR \"convenção coletiva\" OR \"Ministério Público do Trabalho\" OR terceirização"},
+        {"tipo": "google_busca", "q": "(trabalhista OR trabalhador OR empregador) (site:conjur.com.br OR site:migalhas.com.br OR site:jota.info)"}
+      ]
+    },
+    {
+      "nome": "Direito Previdenciário",
+      "emoji": "🛡️",
+      "abertura": "No Direito Previdenciário",
+      "fontes": [
+        {"tipo": "google_busca", "q": "INSS (STF OR STJ OR TNU OR TRF OR Justiça OR decisão OR revisão OR \"pente-fino\" OR perícia OR portaria)"},
+        {"tipo": "google_busca", "q": "previdenciário OR previdenciária OR aposentadoria OR BPC OR \"auxílio-doença\" OR \"benefício por incapacidade\" OR \"pensão por morte\" OR \"salário-maternidade\""},
+        {"tipo": "google_busca", "q": "(previdenciário OR previdenciária OR INSS OR aposentadoria) (site:conjur.com.br OR site:migalhas.com.br OR site:jota.info)"}
+      ]
+    },
+    {
+      "nome": "Administrativo e Licitações",
+      "emoji": "🏛️",
+      "abertura": "Em licitações e Direito Administrativo",
+      "fontes": [
+        {"tipo": "google_busca", "q": "licitação OR licitações OR \"pregão eletrônico\" OR \"Lei 14.133\" OR \"Nova Lei de Licitações\" OR \"contrato administrativo\" OR \"dispensa de licitação\""},
+        {"tipo": "google_busca", "q": "TCU OR \"Tribunal de Contas da União\" OR \"improbidade administrativa\" OR \"responsabilidade fiscal\" OR \"processo administrativo disciplinar\""},
+        {"tipo": "google_busca", "q": "\"TCM-BA\" OR \"TCM da Bahia\" OR \"TCE-BA\" OR \"TCE-SE\" OR \"Tribunal de Contas de Sergipe\" OR \"Tribunal de Contas dos Municípios\""},
+        {"tipo": "google_busca", "q": "(licitação OR licitações OR administrativo OR TCU OR improbidade) (site:conjur.com.br OR site:migalhas.com.br OR site:jota.info)"}
+      ]
+    },
+    {
+      "nome": "Direito Empresarial",
+      "emoji": "🏢",
+      "abertura": "No Direito Empresarial",
+      "fontes": [
+        {"tipo": "google_busca", "q": "\"recuperação judicial\" OR \"recuperação extrajudicial\" OR falência OR \"Lei de Falências\""},
+        {"tipo": "google_busca", "q": "\"direito societário\" OR \"direito empresarial\" OR CVM OR \"Lei das S.A.\" OR DREI OR \"Junta Comercial\" OR \"desconsideração da personalidade jurídica\""},
+        {"tipo": "google_busca", "q": "(empresarial OR societário OR \"recuperação judicial\" OR sócios OR contratos) (site:conjur.com.br OR site:migalhas.com.br OR site:jota.info)"}
+      ]
+    },
+    {
+      "nome": "Tribunais, Leis e Prática",
+      "emoji": "⚖️",
+      "abertura": "Nos tribunais e na legislação",
+      "fontes": [
+        {"tipo": "google_busca", "q": "\"repercussão geral\" OR \"recurso repetitivo\" OR \"recursos repetitivos\" OR \"tema repetitivo\" OR \"súmula vinculante\" OR \"modulação de efeitos\""},
+        {"tipo": "google_busca", "q": "(\"lei sancionada\" OR \"sanciona lei\" OR \"medida provisória\" OR \"Diário Oficial\") (empresas OR tributos OR trabalhadores OR INSS OR licitações)"},
+        {"tipo": "google_busca", "q": "OAB OR CNJ OR \"prazos processuais\" OR \"suspensão de prazos\" OR \"PJe\" OR \"honorários advocatícios\""}
+      ]
+    }
+  ],
+  "resumo_sistema": "Você é editor-chefe de um boletim jurídico e revisor de língua portuguesa com longa experiência. Escreve na norma-padrão do português do Brasil, segundo o Acordo Ortográfico vigente, com pontuação, concordância, regência e crase impecáveis.\n\nSua tarefa: redigir um resumo geral, curto e envolvente, das notícias jurídicas mais relevantes do período, para advogados que atuam nas áreas tributária, trabalhista, previdenciária, administrativa (licitações e contratos públicos) e empresarial, no Nordeste.\n\nRegras obrigatórias:\n1. Use EXCLUSIVAMENTE as informações das manchetes fornecidas. Não acrescente fatos, números, teses, artigos de lei, nomes, datas, efeitos ou contexto que não estejam explícitos nelas. Na dúvida, omita.\n2. Seja neutro: informe, não opine. Não antecipe resultado de julgamento nem trate como definitivo o que a manchete apresenta como proposta, voto, liminar ou projeto.\n3. Atribua as informações às fontes no próprio texto (por exemplo: \"conforme o Conjur\", \"segundo o Migalhas\"), como recomenda a ABNT NBR 10520 para citações indiretas.\n4. Priorize o que mais afeta a prática da advocacia: decisões vinculantes (repercussão geral, recursos repetitivos, súmulas), leis e atos normativos novos, mudanças de prazos e procedimentos, e grandes julgamentos nas cinco áreas.\n5. Tom: técnico e elegante, com uma abertura que desperte a curiosidade do leitor e transições fluidas entre os assuntos. Sem clichês, sem sensacionalismo, sem exclamações.\n6. Extensão: de 3 a 5 parágrafos curtos, entre 180 e 280 palavras no total. Números por extenso até dez; siglas na forma consagrada (STF, STJ, TST, INSS, TCU, CARF).\n7. Responda APENAS com um JSON válido, sem markdown, no formato:\n{\"titulo\": \"título curto e atraente para o resumo\", \"paragrafos\": [\"...\", \"...\"], \"citadas\": [ids das notícias usadas]}"
+}

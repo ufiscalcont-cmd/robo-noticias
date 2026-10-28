@@ -17,6 +17,9 @@ def _limpo(texto: str) -> str:
 
 
 MARCA = "Notícias uFiscal"
+ROTULO = "Notícias"      # palavra em dourado no cabeçalho do e-mail
+EMOJI = "📰"
+UNIDADE = "notícias"     # "N notícias" no topo da edição
 SLOGAN = "Inteligência em negócios"
 OURO, PRETO = "#B8962E", "#000000"
 
@@ -24,6 +27,14 @@ SELO = {"alto": "🔴", "atencao": "🟡", "checagem": "🔎"}
 LEGENDA = ("Alertas automáticos de possível fake news, baseados na fonte, no tom do título, "
            "na confirmação por outros veículos e em agências de checagem. "
            "Não são veredito: confirme antes de compartilhar.")
+
+
+def configurar(marca: str | None = None, rotulo: str | None = None, emoji: str | None = None,
+               unidade: str | None = None) -> None:
+    """Personaliza nome e cabeçalho (ex.: perfil jurídico)."""
+    global MARCA, ROTULO, EMOJI, UNIDADE
+    MARCA, ROTULO = marca or MARCA, rotulo or ROTULO
+    EMOJI, UNIDADE = emoji or EMOJI, unidade or UNIDADE
 
 
 def frase_verificacao(resultado: list[dict], verificacao: dict | None) -> str:
@@ -48,7 +59,7 @@ def total(resultado: list[dict]) -> int:
 
 
 def assunto(janela: Janela, resultado: list[dict]) -> str:
-    return f"📰 {MARCA} · {janela.edicao} · {janela.descricao} · {total(resultado)} itens"
+    return f"{EMOJI} {MARCA} · {janela.edicao} · {janela.descricao} · {total(resultado)} itens"
 
 
 # ---------------------------------------------------------------- WhatsApp
@@ -56,7 +67,7 @@ def texto_whatsapp(janela: Janela, resultado: list[dict], max_por_topico: int = 
                    incluir_links: bool = False, erros: list[str] | None = None,
                    resumo: dict | None = None, verificacao: dict | None = None) -> str:
     tz = janela.fim.tzinfo
-    linhas = [f"📰 *NOTÍCIAS uFISCAL — {janela.edicao.upper()}*", f"🗓️ {janela.descricao}"]
+    linhas = [f"{EMOJI} *{MARCA.upper().replace('UFISCAL', 'uFISCAL')} — {janela.edicao.upper()}*", f"🗓️ {janela.descricao}"]
     alto, atencao = alertas(resultado)
     if verificacao:
         icone = "⚠️" if (alto or atencao) else "✅"
@@ -133,7 +144,7 @@ def dividir(texto: str, limite: int) -> list[str]:
 def texto_email(janela: Janela, resultado: list[dict], erros: list[str] | None = None,
                 resumo: dict | None = None, verificacao: dict | None = None) -> str:
     tz = janela.fim.tzinfo
-    linhas = [f"NOTÍCIAS uFISCAL — {janela.edicao.upper()}", janela.descricao]
+    linhas = [f"{MARCA.upper().replace('UFISCAL', 'uFISCAL')} — {janela.edicao.upper()}", janela.descricao]
     if verificacao:
         linhas += ["", f"VERIFICAÇÃO DE FAKE NEWS: {frase_verificacao(resultado, verificacao)}"]
     if resumo:
@@ -255,11 +266,11 @@ def html_email(janela: Janela, resultado: list[dict], erros: list[str] | None = 
 <tr><td style="background:{PRETO};padding:18px 28px;border-bottom:3px solid {OURO}">
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr>
 <td style="vertical-align:middle"><img src="{logo_src}" width="210" alt="uFiscal — {SLOGAN}" style="display:block;width:210px;max-width:100%;height:auto;border:0;color:#fff;font:700 22px Arial,sans-serif"></td>
-<td align="right" style="vertical-align:middle;color:{OURO};font:700 13px Arial,sans-serif;letter-spacing:.14em;text-transform:uppercase">Notícias</td>
+<td align="right" style="vertical-align:middle;color:{OURO};font:700 13px Arial,sans-serif;letter-spacing:.14em;text-transform:uppercase">{e(ROTULO)}</td>
 </tr></table></td></tr>
 <tr><td style="padding:22px 28px 24px">
 <div style="font-size:12px;letter-spacing:.08em;color:{OURO};text-transform:uppercase;font-weight:700">{e(janela.edicao)}</div>
-<div style="color:#374151;font-size:14px">{e(janela.descricao)} · <b>{total(resultado)}</b> notícias</div>
+<div style="color:#374151;font-size:14px">{e(janela.descricao)} · <b>{total(resultado)}</b> {e(UNIDADE)}</div>
 {resumo_alerta}
 {_resumo_html(resumo)}
 <div style="margin-top:22px;font:700 11px Arial,sans-serif;letter-spacing:.14em;color:{OURO};text-transform:uppercase">Notícias por tópico</div>

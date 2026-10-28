@@ -118,7 +118,8 @@ class TestFluxoCompleto(unittest.TestCase):
     def test_envia_uma_vez_e_reenvia_so_canal_que_falhou(self):
         with tempfile.TemporaryDirectory() as tmp:
             estado = Path(tmp) / "estado.json"
-            env = {"ARQUIVO_ESTADO": str(estado), "CANAIS": "email,whatsapp"}
+            env = {"ARQUIVO_ESTADO": str(estado), "ARQUIVO_HISTORICO": str(Path(tmp) / "h.json"),
+                   "CANAIS": "email,whatsapp"}
             emails, wpps = [], []
             wpp_quebrado = {"sim": True}
 
@@ -149,8 +150,37 @@ class TestFluxoCompleto(unittest.TestCase):
             self.assertEqual(set(dados["enviados"]["2026-10-28_20h"]), {"email", "whatsapp"})
 
 
-if __name__ == "__main__":
-    unittest.main()
+class TestPerfilJuridico(unittest.TestCase):
+    def tearDown(self):
+        formatador.configurar("Notícias uFiscal", "Notícias", "📰", "notícias")
+
+    def test_perfil_juridico_tem_marca_e_topicos_proprios(self):
+        cfg = app.carregar_perfil("juridico")
+        nomes = [t["nome"] for t in cfg["topicos"]]
+        for area in ("Tributário", "Trabalho", "Previdenciário", "Licitações", "Empresarial"):
+            self.assertTrue(any(area in n for n in nomes), area)
+        with tempfile.TemporaryDirectory() as tmp:
+            env = {"PERFIL": "juridico", "ARQUIVO_ESTADO": str(Path(tmp) / "e.json"),
+                   "ARQUIVO_HISTORICO": str(Path(tmp) / "h.json"), "CANAIS": "email", "RESUMO": "sem_ia"}
+            emails, urls = [], []
+
+            def baixar(u):
+                urls.append(u)
+                return FEED
+            with mock.patch.dict("os.environ", env), \
+                 mock.patch.object(app, "janela_atual", lambda tz=None: janela_especifica(HOJE, "20h", TZ)):
+                self.assertEqual(app.principal([], baixar_fn=baixar,
+                                               enviar_email_fn=lambda *a, **k: emails.append(a)), 0)
+        assunto, html = emails[0][1], emails[0][3]
+        self.assertTrue(assunto.startswith("⚖️ Jurídico uFiscal"))
+        self.assertIn(">Jurídico</td>", html)
+        self.assertIn("notícias jurídicas", html)
+        self.assertTrue(any("CARF" in __import__("urllib.parse").parse.unquote_plus(u) for u in urls))
+        self.assertNotIn("topic/SPORTS", " ".join(urls))   # nada dos tópicos gerais
+
+    def test_perfil_inexistente_avisa(self):
+        with self.assertRaises(SystemExit):
+            app.carregar_perfil("nao-existe")
 
 
 class TestEmailOculto(unittest.TestCase):

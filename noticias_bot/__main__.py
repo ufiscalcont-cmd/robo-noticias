@@ -55,6 +55,14 @@ class Estado:
         self.caminho.write_text(json.dumps(self.dados, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
+def carregar_perfil(perfil: str) -> dict:
+    """Configuração do robô: topicos.json (padrão) ou perfis/<perfil>.json."""
+    caminho = RAIZ / "perfis" / f"{perfil}.json" if perfil else RAIZ / "topicos.json"
+    if not caminho.exists():
+        raise SystemExit(f"Perfil não encontrado: {caminho.relative_to(RAIZ)}")
+    return json.loads(caminho.read_text(encoding="utf-8"))
+
+
 def avisar(nivel: str, mensagem: str) -> None:
     """Loga e, no GitHub Actions, cria uma anotação visível na página da execução."""
     {"notice": log.info, "warning": log.warning}.get(nivel, log.error)(mensagem)
@@ -91,7 +99,17 @@ def principal(argv=None, baixar_fn=None, enviar_email_fn=None, enviar_whatsapp_f
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     env = carregar_env(RAIZ / ".env")
-    cfg = json.loads((RAIZ / "topicos.json").read_text(encoding="utf-8"))
+    perfil = (env.get("PERFIL") or "").strip()
+    cfg = carregar_perfil(perfil)
+    marca = cfg.get("marca") or "Notícias uFiscal"
+    env.setdefault("NOME_REMETENTE", marca)
+    formatador.configurar(marca=marca, rotulo=cfg.get("rotulo"), emoji=cfg.get("emoji"),
+                          unidade=cfg.get("unidade"))
+    if cfg.get("resumo_sistema"):
+        resumo_mod.SISTEMA = cfg["resumo_sistema"]
+    resumo_mod.ABERTURAS.update({t["nome"]: t["abertura"] for t in cfg["topicos"] if t.get("abertura")})
+    pasta_dados = RAIZ / "data" / perfil if perfil else RAIZ / "data"
+    log.info("Perfil: %s (%s tópicos)", perfil or "padrão", len(cfg["topicos"]))
     tz = obter_fuso(env.get("FUSO"))
 
     janela = None
@@ -106,7 +124,7 @@ def principal(argv=None, baixar_fn=None, enviar_email_fn=None, enviar_whatsapp_f
     log.info("Janela %s: %s", janela.id, janela.descricao)
 
     canais = [c.strip() for c in (args.canais or (env.get("CANAIS") or "email")).split(",") if c.strip()]
-    estado = Estado(Path((env.get("ARQUIVO_ESTADO") or RAIZ / "data" / "estado.json")))
+    estado = Estado(Path((env.get("ARQUIVO_ESTADO") or pasta_dados / "estado.json")))
     pendentes = [c for c in canais if args.forcar or args.simular or not estado.enviado(janela.id, c)]
     if not pendentes:
         log.info("Janela %s já enviada em todos os canais. Nada a fazer.", janela.id)
@@ -114,10 +132,12 @@ def principal(argv=None, baixar_fn=None, enviar_email_fn=None, enviar_whatsapp_f
 
     kwargs = {"baixar_fn": baixar_fn} if baixar_fn else {}
     todas: list = []
-    resultado, erros = coletar(cfg["topicos"], janela, todas=todas, **kwargs)
+    resultado, erros = coletar(cfg["topicos"], janela, todas=todas,
+                               limite_por_topico=int(cfg.get("limite_por_topico", 40)), **kwargs)
+    avisar("notice", "Por tópico: " + " · ".join(f"{t['nome']} {len(t['noticias'])}" for t in resultado))
 
     # não repete notícias de edições anteriores (só desdobramentos, marcados)
-    historico = Historico(Path(env.get("ARQUIVO_HISTORICO") or RAIZ / "data" / "historico.json"))
+    historico = Historico(Path(env.get("ARQUIVO_HISTORICO") or pasta_dados / "historico.json"))
     removidas, atualizacoes = historico.filtrar(resultado, janela.id)
     avisar("notice", f"Histórico: {removidas} notícia(s) já enviadas foram retiradas; "
                      f"{atualizacoes} desdobramento(s) marcados como atualização")
@@ -159,10 +179,10 @@ def principal(argv=None, baixar_fn=None, enviar_email_fn=None, enviar_whatsapp_f
     partes = formatador.dividir(texto_wpp, envio.limite_whatsapp(env))
 
     if args.simular:
-        saida = RAIZ / "saida"
+        saida = RAIZ / "saida" / perfil if perfil else RAIZ / "saida"
         saida.mkdir(exist_ok=True)
         (saida / f"{janela.id}_email.html").write_text(
-            html.replace("cid:logo-ufiscal", "../assets/logo-ufiscal.png"), encoding="utf-8")
+            html.replace("cid:logo-ufiscal", ("../" if not perfil else "../../") + "assets/logo-ufiscal.png"), encoding="utf-8")
         (saida / f"{janela.id}_whatsapp.txt").write_text("\n\n-----\n\n".join(partes), encoding="utf-8")
         log.info("Simulação gravada em %s (%s parte(s) de WhatsApp)", saida, len(partes))
         return 0
@@ -192,7 +212,7 @@ def principal(argv=None, baixar_fn=None, enviar_email_fn=None, enviar_whatsapp_f
             avisar("error", f"Falha no envio por {canal}: {e}")
 
     if falhas:  # avisa pelo canal que funcionou, e sai com erro (o agendador tenta de novo)
-        alerta = f"⚠️ Notícias uFiscal: falha ao enviar {janela.id} por {', '.join(falhas)}: " + \
+        alerta = f"⚠️ {marca}: falha ao enviar {janela.id} por {', '.join(falhas)}: " + \
                  "; ".join(f"{c}: {m[:200]}" for c, m in falhas.items())
         for canal in [c for c in canais if c not in falhas]:
             try:
