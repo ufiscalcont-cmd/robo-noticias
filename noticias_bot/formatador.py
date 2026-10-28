@@ -17,7 +17,7 @@ def _limpo(texto: str) -> str:
 
 MARCA = "Notícias uFiscal"
 SLOGAN = "Inteligência em negócios"
-OURO, PRETO = "#B8962E", "#111111"
+OURO, PRETO = "#B8962E", "#000000"
 
 SELO = {"alto": "🔴", "atencao": "🟡", "checagem": "🔎"}
 LEGENDA = ("Alertas automáticos de possível fake news, baseados na fonte, no tom do título, "
@@ -143,7 +143,11 @@ def _item_html(n, tz) -> str:
             f'<div style="color:#6b7280;font-size:12px;margin-top:3px">{e(n.fonte)} · {_hora(n, tz)}</div>{alerta}</td></tr>')
 
 
-def html_email(janela: Janela, resultado: list[dict], erros: list[str] | None = None) -> str:
+LOGO_CID = "logo-ufiscal"
+
+
+def html_email(janela: Janela, resultado: list[dict], erros: list[str] | None = None,
+               logo_src: str = f"cid:{LOGO_CID}") -> str:
     tz = janela.fim.tzinfo
     e = html.escape
     indice = " · ".join(
@@ -177,11 +181,11 @@ def html_email(janela: Janela, resultado: list[dict], erros: list[str] | None = 
     return f"""<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;background:#f3f4f6;font-family:Segoe UI,Arial,sans-serif">
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center" style="padding:20px 10px">
 <table role="presentation" width="640" style="max-width:640px;width:100%;background:#fff;border-radius:10px;overflow:hidden" cellspacing="0" cellpadding="0">
-<tr><td style="background:{PRETO};padding:20px 28px;border-bottom:3px solid {OURO}">
-<table role="presentation" cellspacing="0" cellpadding="0"><tr>
-<td style="width:44px;height:44px;border:2px solid {OURO};border-radius:8px;text-align:center;vertical-align:middle;color:{OURO};font:700 20px Georgia,serif">uF</td>
-<td style="padding-left:14px"><div style="color:#fff;font-size:21px;font-weight:700">{MARCA}</div>
-<div style="color:{OURO};font-size:12px;letter-spacing:.06em">{SLOGAN}</div></td></tr></table></td></tr>
+<tr><td style="background:{PRETO};padding:18px 28px;border-bottom:3px solid {OURO}">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr>
+<td style="vertical-align:middle"><img src="{logo_src}" width="210" alt="uFiscal — {SLOGAN}" style="display:block;width:210px;max-width:100%;height:auto;border:0;color:#fff;font:700 22px Arial,sans-serif"></td>
+<td align="right" style="vertical-align:middle;color:{OURO};font:700 13px Arial,sans-serif;letter-spacing:.14em;text-transform:uppercase">Notícias</td>
+</tr></table></td></tr>
 <tr><td style="padding:22px 28px 24px">
 <div style="font-size:12px;letter-spacing:.08em;color:{OURO};text-transform:uppercase;font-weight:700">{e(janela.edicao)}</div>
 <div style="color:#374151;font-size:14px">{e(janela.descricao)} · <b>{total(resultado)}</b> notícias</div>

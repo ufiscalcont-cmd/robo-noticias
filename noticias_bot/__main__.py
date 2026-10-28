@@ -143,7 +143,8 @@ def principal(argv=None, baixar_fn=None, enviar_email_fn=None, enviar_whatsapp_f
     if args.simular:
         saida = RAIZ / "saida"
         saida.mkdir(exist_ok=True)
-        (saida / f"{janela.id}_email.html").write_text(html, encoding="utf-8")
+        (saida / f"{janela.id}_email.html").write_text(
+            html.replace("cid:logo-ufiscal", "../assets/logo-ufiscal.png"), encoding="utf-8")
         (saida / f"{janela.id}_whatsapp.txt").write_text("\n\n-----\n\n".join(partes), encoding="utf-8")
         log.info("Simulação gravada em %s (%s parte(s) de WhatsApp)", saida, len(partes))
         return 0

@@ -11,6 +11,7 @@ import urllib.request
 import re
 from email.message import EmailMessage
 from email.utils import formataddr
+from pathlib import Path
 
 log = logging.getLogger(__name__)
 
@@ -61,6 +62,10 @@ def enviar_email(env: dict, assunto: str, texto: str, html: str,
     msg["Bcc"] = ", ".join(destinos)  # o smtplib entrega e remove este cabeçalho
     msg.set_content(texto)
     msg.add_alternative(html, subtype="html")
+    logo = Path(__file__).resolve().parent.parent / "assets" / "logo-ufiscal.png"
+    if logo.exists():  # logomarca embutida no e-mail (aparece mesmo sem baixar imagens externas)
+        msg.get_payload()[1].add_related(logo.read_bytes(), maintype="image", subtype="png",
+                                         cid="<logo-ufiscal>", filename="logo-ufiscal.png")
 
     def _enviar():
         ctx = ssl.create_default_context()
