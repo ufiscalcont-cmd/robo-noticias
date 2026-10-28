@@ -30,7 +30,9 @@ Coleta as notícias do período, organiza por tópicos e envia por **e-mail** e 
    **E-mail (Gmail)**
    - `SMTP_USUARIO` — seu Gmail
    - `SMTP_SENHA` — **senha de app** (Conta Google → Segurança → Verificação em duas etapas → Senhas de app)
-   - `EMAIL_DESTINO` — quem recebe (pode ser vários, separados por vírgula)
+   - `EMAIL_DESTINO` — quem recebe. Vários e-mails separados por vírgula, ponto e vírgula ou um por linha.
+     Todos recebem em **cópia oculta (Cco)**: ninguém vê os outros destinatários.
+   - `EMAIL_ADMIN` (opcional) — quem recebe os avisos de falha. Padrão: o próprio remetente.
 
    **WhatsApp** — escolha um provedor:
    - `WHATSAPP_PROVEDOR` = `callmebot`, `zapi` ou `evolution`

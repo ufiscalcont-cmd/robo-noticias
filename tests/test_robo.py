@@ -132,7 +132,7 @@ class TestFluxoCompleto(unittest.TestCase):
                      mock.patch.object(app, "janela_atual", lambda tz=None: janela_especifica(HOJE, "20h", TZ)), \
                      mock.patch("noticias_bot.envio.time.sleep"):
                     return app.principal([], baixar_fn=lambda u: FEED,
-                                         enviar_email_fn=lambda *a: emails.append(a),
+                                         enviar_email_fn=lambda *a, **k: emails.append(a),
                                          enviar_whatsapp_fn=wpp)
 
             self.assertEqual(rodar(), 1)            # WhatsApp falhou
@@ -148,3 +148,26 @@ class TestFluxoCompleto(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestEmailOculto(unittest.TestCase):
+    def test_destinatarios_ficam_ocultos(self):
+        from noticias_bot import envio
+        enviadas = []
+
+        class FakeSMTP:
+            def __init__(self, *a, **k): pass
+            def __enter__(self): return self
+            def __exit__(self, *a): pass
+            def login(self, *a): pass
+            def send_message(self, msg):
+                enviadas.append(msg)
+
+        env = {"SMTP_USUARIO": "robo@gmail.com", "SMTP_SENHA": "x",
+               "EMAIL_DESTINO": "a@x.com; b@y.com,\nc@z.com, a@x.com"}
+        with mock.patch("smtplib.SMTP_SSL", FakeSMTP):
+            envio.enviar_email(env, "Assunto", "texto", "<p>html</p>")
+        msg = enviadas[0]
+        self.assertEqual(msg["Bcc"], "a@x.com, b@y.com, c@z.com")
+        self.assertNotIn("a@x.com", msg["To"])
+        self.assertIn("Notícias uFiscal", msg["From"])

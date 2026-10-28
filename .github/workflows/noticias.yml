@@ -61,6 +61,7 @@ jobs:
           SMTP_SENHA: ${{ secrets.SMTP_SENHA }}
           EMAIL_DESTINO: ${{ secrets.EMAIL_DESTINO }}
           EMAIL_REMETENTE: ${{ secrets.EMAIL_REMETENTE }}
+          EMAIL_ADMIN: ${{ secrets.EMAIL_ADMIN }}
           WHATSAPP_PROVEDOR: ${{ secrets.WHATSAPP_PROVEDOR }}
           WHATSAPP_NUMERO: ${{ secrets.WHATSAPP_NUMERO }}
           WHATSAPP_LINKS: ${{ vars.WHATSAPP_LINKS }}

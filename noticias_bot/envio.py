@@ -8,7 +8,9 @@ import ssl
 import time
 import urllib.parse
 import urllib.request
+import re
 from email.message import EmailMessage
+from email.utils import formataddr
 
 log = logging.getLogger(__name__)
 
@@ -31,14 +33,32 @@ def _exigir(env: dict, *chaves: str) -> None:
 
 
 # ------------------------------------------------------------------ e-mail
-def enviar_email(env: dict, assunto: str, texto: str, html: str) -> None:
-    _exigir(env, "SMTP_USUARIO", "SMTP_SENHA", "EMAIL_DESTINO")
+def lista_emails(texto: str | None) -> list[str]:
+    """Aceita e-mails separados por vírgula, ponto e vírgula, espaço ou quebra de linha."""
+    vistos, saida = set(), []
+    for e in re.split(r"[,;\s]+", texto or ""):
+        e = e.strip()
+        if "@" in e and e.lower() not in vistos:
+            vistos.add(e.lower())
+            saida.append(e)
+    return saida
+
+
+def enviar_email(env: dict, assunto: str, texto: str, html: str,
+                 destinatarios: list[str] | None = None) -> None:
+    """Envia com os destinatários em cópia oculta (Cco): ninguém vê quem mais recebe."""
+    _exigir(env, "SMTP_USUARIO", "SMTP_SENHA")
+    destinos = destinatarios or lista_emails(env.get("EMAIL_DESTINO"))
+    if not destinos:
+        raise RuntimeError("Configuração ausente: EMAIL_DESTINO")
     host = (env.get("SMTP_HOST") or "smtp.gmail.com")
     porta = int((env.get("SMTP_PORTA") or "465"))
+    remetente = env.get("EMAIL_REMETENTE") or formataddr(("Notícias uFiscal", env["SMTP_USUARIO"]))
     msg = EmailMessage()
     msg["Subject"] = assunto
-    msg["From"] = env.get("EMAIL_REMETENTE") or env["SMTP_USUARIO"]
-    msg["To"] = env["EMAIL_DESTINO"]
+    msg["From"] = remetente
+    msg["To"] = remetente          # o "Para" visível é o próprio remetente
+    msg["Bcc"] = ", ".join(destinos)  # o smtplib entrega e remove este cabeçalho
     msg.set_content(texto)
     msg.add_alternative(html, subtype="html")
 
@@ -55,7 +75,7 @@ def enviar_email(env: dict, assunto: str, texto: str, html: str) -> None:
                 s.send_message(msg)
 
     _com_tentativas(_enviar, "E-mail")
-    log.info("E-mail enviado para %s", env["EMAIL_DESTINO"])
+    log.info("E-mail enviado em cópia oculta para %s destinatário(s)", len(destinos))
 
 
 # ---------------------------------------------------------------- WhatsApp

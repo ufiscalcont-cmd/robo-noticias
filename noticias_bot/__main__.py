@@ -171,7 +171,9 @@ def principal(argv=None, baixar_fn=None, enviar_email_fn=None, enviar_whatsapp_f
         for canal in [c for c in canais if c not in falhas]:
             try:
                 if canal == "email":
-                    enviar_email_fn(env, alerta[:150], alerta, f"<p>{alerta}</p>")
+                    # alerta de falha vai só para o administrador, não para a lista
+                    admin = envio.lista_emails(env.get("EMAIL_ADMIN") or env.get("SMTP_USUARIO"))
+                    enviar_email_fn(env, alerta[:150], alerta, f"<p>{alerta}</p>", admin or None)
                 else:
                     enviar_whatsapp_fn(env, [alerta])
             except Exception:
