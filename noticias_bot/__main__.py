@@ -54,10 +54,35 @@ class Estado:
         self.caminho.write_text(json.dumps(self.dados, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
+def avisar(nivel: str, mensagem: str) -> None:
+    """Loga e, no GitHub Actions, cria uma anotação visível na página da execução."""
+    log.warning(mensagem) if nivel == "warning" else log.error(mensagem)
+    if os.environ.get("GITHUB_ACTIONS"):
+        print(f"::{nivel}::{mensagem.replace(chr(10), ' ')}", flush=True)
+
+
+def ler_data(texto: str | None) -> date | None:
+    for formato in ("%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y"):
+        try:
+            return datetime.strptime((texto or "").strip(), formato).date()
+        except ValueError:
+            pass
+    return None
+
+
+def ler_edicao(texto: str | None) -> str | None:
+    t = (texto or "").strip().lower().replace("ã", "a")
+    if t in ("08h", "8h", "08", "8", "08:00", "8:00", "manha"):
+        return "08h"
+    if t in ("20h", "20", "20:00", "noite"):
+        return "20h"
+    return None
+
+
 def principal(argv=None, baixar_fn=None, enviar_email_fn=None, enviar_whatsapp_fn=None) -> int:
     ap = argparse.ArgumentParser(prog="noticias_bot")
-    ap.add_argument("--data", help="dia da edição (AAAA-MM-DD); padrão: automático")
-    ap.add_argument("--edicao", choices=["08h", "20h"], help="edição; padrão: automático")
+    ap.add_argument("--data", help="dia da edição (AAAA-MM-DD ou DD/MM/AAAA); padrão: automático")
+    ap.add_argument("--edicao", help="08h (manhã) ou 20h (noite); padrão: automático")
     ap.add_argument("--forcar", action="store_true", help="envia mesmo se já enviado")
     ap.add_argument("--simular", action="store_true", help="não envia; grava prévias em saida/")
     ap.add_argument("--canais", help="ex.: email,whatsapp (padrão: variável CANAIS)")
@@ -68,12 +93,15 @@ def principal(argv=None, baixar_fn=None, enviar_email_fn=None, enviar_whatsapp_f
     cfg = json.loads((RAIZ / "topicos.json").read_text(encoding="utf-8"))
     tz = obter_fuso(env.get("FUSO"))
 
+    janela = None
     if args.data or args.edicao:
-        if not (args.data and args.edicao):
-            ap.error("--data e --edicao devem ser usados juntos")
-        janela = janela_especifica(date.fromisoformat(args.data), args.edicao, tz)
-    else:
-        janela = janela_atual(tz=tz)
+        dia, edicao = ler_data(args.data), ler_edicao(args.edicao)
+        if dia and edicao:
+            janela = janela_especifica(dia, edicao, tz)
+        else:
+            avisar("warning", f"Data/edição inválidas ({args.data!r}, {args.edicao!r}); "
+                              "usando a edição automática. Use AAAA-MM-DD e 08h ou 20h.")
+    janela = janela or janela_atual(tz=tz)
     log.info("Janela %s: %s", janela.id, janela.descricao)
 
     canais = [c.strip() for c in (args.canais or (env.get("CANAIS") or "email")).split(",") if c.strip()]
@@ -118,6 +146,7 @@ def principal(argv=None, baixar_fn=None, enviar_email_fn=None, enviar_whatsapp_f
         except Exception as e:
             log.exception("Falha no canal %s", canal)
             falhas[canal] = str(e)
+            avisar("error", f"Falha no envio por {canal}: {e}")
 
     if falhas:  # avisa pelo canal que funcionou, e sai com erro (o agendador tenta de novo)
         alerta = f"⚠️ Robô de Notícias: falha ao enviar {janela.id} por {', '.join(falhas)}: " + \
@@ -134,5 +163,16 @@ def principal(argv=None, baixar_fn=None, enviar_email_fn=None, enviar_whatsapp_f
     return 0
 
 
+def executar() -> int:
+    try:
+        return principal()
+    except SystemExit:
+        raise
+    except Exception as e:
+        log.exception("Erro inesperado")
+        avisar("error", f"Erro inesperado: {type(e).__name__}: {e}")
+        return 1
+
+
 if __name__ == "__main__":
-    sys.exit(principal())
+    sys.exit(executar())

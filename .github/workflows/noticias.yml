@@ -21,8 +21,10 @@ on:
         description: "Dia da edição (AAAA-MM-DD) — vazio = automático"
         required: false
       edicao:
-        description: "08h ou 20h — vazio = automático"
-        required: false
+        description: "Edição — vazio = automático"
+        type: choice
+        options: ["", "08h", "20h"]
+        default: ""
       forcar:
         description: "Reenviar mesmo se já enviado"
         type: boolean
@@ -40,9 +42,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -65,13 +67,15 @@ jobs:
           EVOLUTION_URL: ${{ secrets.EVOLUTION_URL }}
           EVOLUTION_INSTANCIA: ${{ secrets.EVOLUTION_INSTANCIA }}
           EVOLUTION_APIKEY: ${{ secrets.EVOLUTION_APIKEY }}
+          ENTRADA_DATA: ${{ inputs.data }}
+          ENTRADA_EDICAO: ${{ inputs.edicao }}
+          ENTRADA_FORCAR: ${{ inputs.forcar }}
         run: |
-          ARGS=""
-          if [ -n "${{ inputs.data }}" ] && [ -n "${{ inputs.edicao }}" ]; then
-            ARGS="--data ${{ inputs.data }} --edicao ${{ inputs.edicao }}"
-          fi
-          if [ "${{ inputs.forcar }}" = "true" ]; then ARGS="$ARGS --forcar"; fi
-          python -m noticias_bot $ARGS
+          ARGS=()
+          if [ -n "$ENTRADA_DATA" ]; then ARGS+=(--data "$ENTRADA_DATA"); fi
+          if [ -n "$ENTRADA_EDICAO" ]; then ARGS+=(--edicao "$ENTRADA_EDICAO"); fi
+          if [ "$ENTRADA_FORCAR" = "true" ]; then ARGS+=(--forcar); fi
+          python -m noticias_bot "${ARGS[@]}"
 
       # Salva o registro de envios (mesmo se um canal falhou) e mantém o
       # repositório ativo — o GitHub desliga agendamentos após 60 dias parado.
